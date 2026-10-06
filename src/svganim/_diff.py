@@ -6,6 +6,23 @@ from xml.etree import ElementTree as ET
 
 from svganim._svg import _props, _tag
 
+# matplotlib leaves a property out of the SVG when it has the value the document would
+# give it anyway, so a frame without one of these has that value, which is what the
+# animation needs. They are SVG's initial values, except for the two that matplotlib's
+# own style sheet sets: ``*{stroke-linejoin: round; stroke-linecap: butt}``.
+_DEFAULTS = {
+    "opacity": "1",
+    "fill-opacity": "1",
+    "stroke-opacity": "1",
+    "stroke-width": "1",
+    "stroke-dasharray": "0",
+    "stroke-dashoffset": "0",
+    "stroke-linecap": "butt",
+    "stroke-linejoin": "round",
+    "fill": "#000000",
+    "stroke": "transparent",
+}
+
 
 def _record_changes(
     changes: dict[tuple[int, str], dict[int, str]],
@@ -21,17 +38,20 @@ def _record_changes(
     ):
         raise _structure_error(frame, walked, base_walked)
     for idx, ((el, label), _) in enumerate(zip(walked, base_walked, strict=True)):
-        props = _props(el)
-        if props == base_props[idx]:
+        props, base = _props(el), base_props[idx]
+        if props == base:
             continue
-        if props.keys() != base_props[idx].keys():
-            name = min(props.keys() ^ base_props[idx].keys())
-            raise ValueError(
-                f"attribute {name!r} of <{_tag(el)}> in {label!r} "
-                f"is missing in some frames"
-            )
+        if props.keys() != base.keys():
+            missing = props.keys() ^ base.keys()
+            if unknown := missing - _DEFAULTS.keys():
+                raise ValueError(
+                    f"attribute {min(unknown)!r} of <{_tag(el)}> in {label!r} "
+                    f"is missing in some frames"
+                )
+            for name in missing:  # whichever side lacks it has its default
+                (base if name in props else props)[name] = _DEFAULTS[name]
         for name, value in props.items():
-            if value != base_props[idx][name]:
+            if value != base[name]:
                 changes.setdefault((idx, name), {})[frame] = value
 
 

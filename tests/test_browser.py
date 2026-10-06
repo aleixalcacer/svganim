@@ -88,6 +88,9 @@ def _difference(a, b):
 # enough to put a probe taken right at the change on the wrong side of it.
 FRAMES = 10
 FPS = 10
+# The property cases only need a few steps. Five steps at five frames per second also
+# last exactly one second, so their key times are exact too.
+STEPS = 5
 
 # How long after a key time an interpolated animation is sampled. At the key time
 # itself the browser's clock resolution (about 1e-7 s) can leave an attribute that
@@ -171,6 +174,109 @@ def _coming_and_going():
         blink.set_visible(i in (2, 3, 4, 7))
 
     return fig, update, FRAMES
+
+
+def _property_case(make, setter, values):
+    """A figure with one artist whose style property takes ``values``, one per frame."""
+
+    def scenario():
+        fig, artist = make()
+        return fig, lambda i: setter(artist, values[i]), STEPS
+
+    return scenario
+
+
+def _line_artist():
+    fig, ax = plt.subplots(figsize=(3, 2))
+    ax.set_ylim(-1.5, 1.5)
+    x = np.linspace(0, 6, 30)
+    return fig, ax.plot(x, np.sin(x), lw=3)[0]
+
+
+def _scatter_artist():
+    fig, ax = plt.subplots(figsize=(3, 2))
+    return fig, ax.scatter(np.arange(5), np.arange(5) % 3, s=80)
+
+
+def _bars_artist():
+    fig, ax = plt.subplots(figsize=(3, 2))
+    return fig, ax.bar(range(3), [1, 2, 3], edgecolor="k")
+
+
+def _text_artist():
+    fig, ax = plt.subplots(figsize=(3, 2))
+    return fig, ax.text(0.4, 0.4, "7", fontsize=40)
+
+
+def _each_bar(setter):
+    return lambda bars, value: [setter(bar, value) for bar in bars]
+
+
+def _cycle(*items):
+    return [items[i % len(items)] for i in range(STEPS)]
+
+
+# Properties that matplotlib leaves out of the SVG when they have their default value,
+# so that some frames lack the attribute that others have.
+PROPERTIES = {
+    "alpha up to 1": _property_case(
+        _line_artist, lambda a, v: a.set_alpha(v), np.linspace(0.2, 1, STEPS)
+    ),
+    "alpha down from 1": _property_case(
+        _line_artist, lambda a, v: a.set_alpha(v), np.linspace(1, 0.2, STEPS)
+    ),
+    "line width down to 1": _property_case(
+        _line_artist, lambda a, v: a.set_linewidth(v), np.linspace(3, 1, STEPS)
+    ),
+    "line width up from 1": _property_case(
+        _line_artist, lambda a, v: a.set_linewidth(v), np.linspace(1, 3, STEPS)
+    ),
+    "line style": _property_case(
+        _line_artist, lambda a, v: a.set_linestyle(v), _cycle("-", "--", ":", "-.")
+    ),
+    "cap style": _property_case(
+        _line_artist,
+        lambda a, v: a.set_solid_capstyle(v),
+        _cycle("butt", "round", "projecting"),
+    ),
+    "join style": _property_case(
+        _line_artist,
+        lambda a, v: a.set_solid_joinstyle(v),
+        _cycle("miter", "round", "bevel"),
+    ),
+    "scatter alpha up to 1": _property_case(
+        _scatter_artist, lambda a, v: a.set_alpha(v), np.linspace(0.2, 1, STEPS)
+    ),
+    "scatter edge width": _property_case(
+        _scatter_artist, lambda a, v: a.set_linewidths(v), np.linspace(0, 4, STEPS)
+    ),
+    "bar alpha up to 1": _property_case(
+        _bars_artist,
+        _each_bar(lambda b, v: b.set_alpha(v)),
+        np.linspace(0.2, 1, STEPS),
+    ),
+    "bar edge width down to 1": _property_case(
+        _bars_artist,
+        _each_bar(lambda b, v: b.set_linewidth(v)),
+        np.linspace(4, 1, STEPS),
+    ),
+    "text alpha up to 1": _property_case(
+        _text_artist, lambda a, v: a.set_alpha(v), np.linspace(0.2, 1, STEPS)
+    ),
+    "bar face colour through none": _property_case(
+        _bars_artist,
+        _each_bar(lambda b, v: b.set_facecolor(v)),
+        _cycle("none", "tab:red", "none", "tab:blue"),
+    ),
+    "bar edge colour through none": _property_case(
+        _bars_artist,
+        _each_bar(lambda b, v: b.set_edgecolor(v)),
+        _cycle("none", "k", "none", "tab:red"),
+    ),
+    "text colour": _property_case(
+        _text_artist, lambda a, v: a.set_color(v), _cycle("black", "red", "blue")
+    ),
+}
 
 
 SCENARIOS = {
@@ -277,4 +383,21 @@ def test_artists_created_and_removed_in_update(page, replace):
     for i in range(FRAMES):
         drawn = _paint(page, svg, (i + 0.5) / FPS)
         assert _difference(drawn, _paint(page, plains[i])).max() <= NOISE, f"frame {i}"
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("interpolate", [False, True], ids=["stepwise", "interpolate"])
+@pytest.mark.parametrize("name", PROPERTIES)
+def test_a_property_that_reaches_its_default_value_is_painted_right(
+    page, name, interpolate
+):
+    fig, update, n = PROPERTIES[name]()
+    svg = anim_to_svg(
+        fig, update, n, fps=n, hold=0, precision=6, interpolate=interpolate
+    )
+    for i in range(n):
+        time = i / n + AFTER if interpolate else (i + 0.5) / n
+        drawn = _paint(page, svg, time)
+        expected = _plain_frame(page, fig, update, i, simplify=not interpolate)
+        assert _difference(drawn, expected).max() <= NOISE, f"frame {i} differs"
     plt.close(fig)

@@ -94,6 +94,17 @@ class _Defs:
                     self.target.append(child)
 
 
+# Chromium drops a whole SMIL animation that goes through ``none``, in the frames that
+# have it and in those that do not. The same picture is written with a value it does
+# animate: a fully transparent paint, and a dash array of zero, which SVG treats as
+# none.
+_ANIMATABLE_NONE = {
+    "fill": "transparent",
+    "stroke": "transparent",
+    "stroke-dasharray": "0",
+}
+
+
 def _props(el: ET.Element) -> dict[str, str]:
     """Attributes and inline-style properties of ``el`` in one flat dict."""
     props = {k: v for k, v in el.attrib.items() if k not in ("id", "style")}
@@ -101,4 +112,6 @@ def _props(el: ET.Element) -> dict[str, str]:
         key, _, val = decl.partition(":")
         if val:
             props[key.strip()] = val.strip()
-    return props
+    return {
+        k: _ANIMATABLE_NONE.get(k, v) if v == "none" else v for k, v in props.items()
+    }
