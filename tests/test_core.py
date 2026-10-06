@@ -2,6 +2,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+import base64
 from xml.etree import ElementTree as ET
 
 import matplotlib.pyplot as plt
@@ -28,6 +29,17 @@ def test_only_the_line_is_animated():
     assert svg.count("<animate ") == 1
     assert 'attributeName="d"' in svg
     assert svg.count(";") > 10  # one value per frame
+    plt.close(fig)
+
+
+def test_notebook_display_is_an_img_with_the_svg():
+    fig, update = _wave()
+    svg = anim_to_svg(fig, update, n_frames=3)
+    assert isinstance(svg, str)
+    html = svg._repr_html_()
+    assert html.startswith('<img src="data:image/svg+xml;base64,')
+    payload = html.split("base64,")[1].rstrip('">')
+    assert base64.b64decode(payload).decode() == svg
     plt.close(fig)
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import io
 import re
 from collections.abc import Callable, Iterator
@@ -33,6 +34,16 @@ _INTERPOLABLE = {
 _COLOR = {"fill", "stroke"}
 
 
+class SvgAnimation(str):
+    """The SVG text, which Jupyter and Quarto display as an animated image."""
+
+    __slots__ = ()
+
+    def _repr_html_(self) -> str:
+        data = base64.b64encode(self.encode("utf-8")).decode("ascii")
+        return f'<img src="data:image/svg+xml;base64,{data}">'
+
+
 def anim_to_svg(
     fig: Figure,
     update: Callable[[int], object],
@@ -43,8 +54,12 @@ def anim_to_svg(
     *,
     precision: int = 3,
     interpolate: bool = False,
-) -> str:
+) -> SvgAnimation:
     """Render ``fig`` as a looping SVG animation and return it as a string.
+
+    The result is a :class:`SvgAnimation`, a :class:`str` subclass, so it can be
+    written or embedded as is. As the last expression of a Jupyter or Quarto
+    cell it is displayed as an animated image.
 
     ``update(i)`` is called before frame ``i`` is rendered. Frame 0 becomes the
     base document; every attribute that differs in later frames gets a SMIL
@@ -81,8 +96,8 @@ def anim_to_svg(
 
     Returns
     -------
-    str
-        The animated SVG document.
+    SvgAnimation
+        The animated SVG document, as a ``str`` subclass.
 
     Raises
     ------
@@ -134,7 +149,7 @@ def anim_to_svg(
     svg = ET.tostring(base, encoding="unicode")
     if path is not None:
         Path(path).write_text(svg, encoding="utf-8")
-    return svg
+    return SvgAnimation(svg)
 
 
 def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
