@@ -5,3 +5,8 @@
   padding: 0.75rem;
   background: #fff;
 }
+
+/* The square logo fills the whole sidebar by default; keep it compact. */
+.sidebar-logo {
+  max-width: 150px;
+}

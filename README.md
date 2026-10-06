@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-horizontal-dark.svg">
+    <img src="assets/logo-horizontal.svg" alt="svganim logo" width="360">
+  </picture>
+</p>
+
 # svganim
 
 Turn a matplotlib figure and a per-frame update function into one

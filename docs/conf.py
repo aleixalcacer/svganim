@@ -14,7 +14,13 @@ os.environ.setdefault("MPLBACKEND", "Agg")  # headless builds
 
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES = ROOT / "examples"
-GENERATED = Path(__file__).resolve().parent / "_static" / "examples"
+STATIC = Path(__file__).resolve().parent / "_static"
+GENERATED = STATIC / "examples"
+ASSETS = ROOT / "assets"
+
+# The logo lives in assets/ (the README uses it too); the theme reads it from _static.
+for _logo in ("logo.svg", "logo-text.svg", "logo-text-dark.svg"):
+    shutil.copy(ASSETS / _logo, STATIC / _logo)
 
 project = "svganim"
 author = "Aleix Alcacer Sales"
@@ -39,6 +45,12 @@ myst_enable_extensions = ["colon_fence"]
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_theme_options = {
+    "light_logo": "logo-text.svg",
+    "dark_logo": "logo-text-dark.svg",
+    "sidebar_hide_name": True,  # the logo already carries the name
+}
+html_favicon = "_static/logo.svg"
 html_css_files = ["gallery.css"]
 exclude_patterns = ["_build"]
 
