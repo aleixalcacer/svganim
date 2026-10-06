@@ -66,6 +66,18 @@ An optimizer zig-zagging down a narrow valley.
 Points that show up one by one, and a ring at the end.
 :::
 
+:::{grid-item-card} Rescaling axes
+:link: rescaling
+:link-type: doc
+:class-card: sd-shadow-sm
+
+```{glue:any} rescaling
+:doc: rescaling.md
+```
+
+A curve that grows while the axes rescale and the title counts.
+:::
+
 :::{grid-item-card} Lorenz attractor
 :link: lorenz
 :link-type: doc
@@ -100,6 +112,7 @@ pendulum
 sorting
 gradient_descent
 appearing
+rescaling
 lorenz
 kmeans
 ```

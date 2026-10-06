@@ -86,10 +86,9 @@ def anim_to_svg(
     ------
     ValueError
         If an argument is out of range, if the figure contains raster images
-        (``imshow``, ``rasterized=True``), if the number or order of the SVG
-        elements of an artist changes between frames (the message names the
-        element), if two artists share a gid, or if a transform cannot be
-        animated.
+        (``imshow``, ``rasterized=True``), if an element is of another kind than it
+        was in the first frame that has it (the message names the element), if two
+        artists share a gid, or if a transform cannot be animated.
 
     Notes
     -----
@@ -97,9 +96,13 @@ def anim_to_svg(
     left as the last frame set it. Call ``update(0)`` to go back to the first one.
 
     An artist that is not drawn in every frame is shown only in the frames where
-    matplotlib draws it. To follow each artist from frame to frame, svganim gives
-    it a gid while it works and takes it off at the end; a gid that you set
-    yourself is kept, and two artists cannot share one.
+    matplotlib draws it, and so are the elements that an artist has in some frames
+    and not in others at its end: the letters of a text that changes length, the
+    points of a scatter plot, the ticks of an axis.
+
+    To follow each artist from frame to frame, svganim gives it a gid while it
+    works and takes it off at the end; a gid that you set yourself is kept, and two
+    artists cannot share one.
 
     Examples
     --------
@@ -117,8 +120,9 @@ def anim_to_svg(
     # The document and each artist are followed separately, because artists can come
     # and go: the document is what is left once they are cut out of a frame.
     tagger = _Tagger()
+    document = _Tracked()
     artists: dict[str, _Tracked] = {}
-    orders: dict[int, list[_Key]] = {}
+    orders: dict[ET.Element, list[_Key]] = {}
     try:
         for i in range(n_frames):
             update(i)
@@ -131,26 +135,22 @@ def anim_to_svg(
             else:
                 defs.merge(root)
             found, parents = _extract(root)
-            if i == 0:
-                document = _Tracked(0, root, 0)
-            else:
-                document.see(i, root, 0)
+            stands_for = document.see(i, root, None)
             for gid, (el, parent) in found.items():
-                if gid in artists:
-                    artists[gid].see(i, el, parent)
-                else:
-                    artists[gid] = _Tracked(i, el, parent)
-            for parent, keys in parents.items():
-                _merge(orders.setdefault(parent, []), keys)
+                artists.setdefault(gid, _Tracked()).see(i, el, stands_for[id(parent)])
+            for parent, keys in parents:
+                _merge(orders.setdefault(stands_for[id(parent)], []), keys)
     finally:
         tagger.restore()
 
     base = document.element(n_frames, times, duration, interpolate)
-    elements = {
-        gid: artist.element(n_frames, times, duration, interpolate)
-        for gid, artist in artists.items()
-    }
-    _put_back([node for node, _ in document.walked], orders, elements)
+    _put_back(
+        orders,
+        {
+            gid: art.element(n_frames, times, duration, interpolate)
+            for gid, art in artists.items()
+        },
+    )
 
     svg = ET.tostring(base, encoding="unicode")
     if path is not None:

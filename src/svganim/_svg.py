@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import re
-from collections.abc import Iterator
 from xml.etree import ElementTree as ET
 
 import matplotlib as mpl
@@ -21,6 +20,7 @@ _METADATA = f"{{{SVG}}}metadata"
 
 # Attributes whose numbers are rounded to `precision` decimals.
 _NUMERIC = {"d", "transform", "x", "y", "width", "height", "points"}
+_FUNCTION = re.compile(r"\w+\([^)]*\)")
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?(?:e[-+]?\d+)?", re.IGNORECASE)
 
 
@@ -43,10 +43,28 @@ def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
         )
     for child in root.findall(_METADATA):
         root.remove(child)
+    for el in list(root.iter()):
+        _split_transform(el)
     for el in root.iter():
         for key in _NUMERIC & el.attrib.keys():
             el.set(key, _round(el.get(key, ""), precision))
     return root
+
+
+def _split_transform(el: ET.Element) -> None:
+    """Leave a single transform function on ``el`` and nest the rest inside it.
+
+    SMIL animates one transform function at a time, and matplotlib writes the place
+    of a text as ``translate(...) scale(...)``. ``A B`` on a group is the same as
+    ``A`` on it and ``B`` on a group around its children.
+    """
+    functions = _FUNCTION.findall(el.get("transform", ""))
+    if len(functions) > 1 and len(el):
+        inner = ET.Element(f"{{{SVG}}}g", {"transform": " ".join(functions[1:])})
+        inner.extend(el)
+        el[:] = [inner]
+        el.set("transform", functions[0])
+        _split_transform(inner)
 
 
 def _round(value: str, precision: int) -> str:
@@ -59,20 +77,6 @@ def _round(value: str, precision: int) -> str:
 
 def _tag(el: ET.Element) -> str:
     return el.tag.rpartition("}")[2]
-
-
-def _walk(el: ET.Element, label: str = "") -> Iterator[tuple[ET.Element, str]]:
-    """Yield ``(element, label)`` for ``el`` and its descendants, skipping defs.
-
-    The label is the id of the closest element that has one (matplotlib names
-    its artists, e.g. ``line2d_3``), used to say where something went wrong.
-    """
-    if el.tag == _DEFS:
-        return
-    label = el.get("id", label)
-    yield el, label
-    for child in el:
-        yield from _walk(child, label)
 
 
 class _Defs:

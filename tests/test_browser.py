@@ -279,12 +279,84 @@ PROPERTIES = {
 }
 
 
+def _text_changing_length():
+    """A title and a counter whose number of digits goes up and down."""
+    fig, ax = plt.subplots(figsize=(5, 3))
+    ax.set(xlim=(0, 1), ylim=(0, 1))
+    ax.axis("off")
+    counter = ax.text(0.5, 0.4, "", ha="center", fontsize=30)
+    words = ["a", "bb", "ccc", "dddd", "ccc", "bb", "a", "ee", "fffff", "g"]
+    numbers = ["9", "10", "99", "100", "1000", "100", "10", "9", "99", "9"]
+
+    def update(i):
+        ax.set_title(words[i])
+        counter.set_text(numbers[i])
+
+    return fig, update, FRAMES
+
+
+def _growing_scatter():
+    """A scatter that gains points and, later, loses them from the front."""
+    points = np.random.default_rng(4).random((FRAMES + 1, 2))
+    fig, ax = plt.subplots(figsize=(5, 3))
+    ax.set(xlim=(0, 1), ylim=(0, 1))
+    scatter = ax.scatter([], [], s=60)
+
+    def update(i):
+        scatter.set_offsets(points[: i + 1] if i < 6 else points[i - 4 : i + 1])
+
+    return fig, update, FRAMES
+
+
+def _growing_markers():
+    fig, ax = plt.subplots(figsize=(5, 3))
+    ax.set(xlim=(0, 10), ylim=(-2, 2))
+    (line,) = ax.plot([], [], "o-")
+    x = np.linspace(0, 9, FRAMES)
+
+    def update(i):
+        line.set_data(x[: i + 1], np.sin(x[: i + 1]))
+
+    return fig, update, FRAMES
+
+
+def _zooming_axes():
+    """Axis limits that change, and with them the number and the text of the ticks."""
+    fig, ax = plt.subplots(figsize=(5, 3))
+    x = np.linspace(0, 100, 200)
+    ax.plot(x, np.sin(x / 7))
+    widths = [100, 80, 55, 30, 12, 6, 3, 8, 40, 100]
+
+    def update(i):
+        ax.set_xlim(0, widths[i])
+
+    return fig, update, FRAMES
+
+
+def _growing_data_with_rescaling_axes():
+    fig, ax = plt.subplots(figsize=(5, 3))
+    x = np.linspace(0, 10, FRAMES)
+    (line,) = ax.plot([], [])
+
+    def update(i):
+        line.set_data(x[: i + 1], (x[: i + 1] ** 2) * 10)
+        ax.relim()
+        ax.autoscale_view()
+
+    return fig, update, FRAMES
+
+
 SCENARIOS = {
     "wave": _wave,
     "bars": _bars,
     "clusters": _clusters,
     "growing trail": _growing_trail,
     "coming and going": _coming_and_going,
+    "text changing length": _text_changing_length,
+    "growing scatter": _growing_scatter,
+    "growing markers": _growing_markers,
+    "zooming axes": _zooming_axes,
+    "rescaling axes": _growing_data_with_rescaling_axes,
 }
 
 

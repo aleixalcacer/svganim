@@ -69,10 +69,18 @@ To follow each artist from frame to frame, svganim gives it a gid while it works
 and takes it off at the end. A gid you set yourself with `set_gid` is kept, and
 two artists cannot share one.
 
-What cannot change is the number of elements inside one artist. Text can change
-as long as it keeps its length, so a counter whose digits change is fine and a
-title that grows is not, and axis limits that add or remove ticks fail too. In
-both cases a `ValueError` names the element.
+An artist can also gain or lose elements at its end: the letters of a text that
+changes length, the points of a scatter plot, the ticks of an axis whose limits
+change. Each one is drawn only in the frames that have it. So a counter can go
+from 9 to 10, a plot can grow and rescale its axes, and a scatter plot can get
+more points or lose some. Points are told apart by their place in the list, so if
+you remove one from the middle with `interpolate=True`, the ones after it glide to
+the place of the next, which is only right if they all move that way. Keep their
+number fixed and hide the extra ones if they should stay where they are.
+
+What cannot change is the kind of element in a place. A scatter plot whose face
+colour goes through `none` is drawn with other elements, and a `ValueError` names
+it.
 
 ## Notebooks and Quarto
 

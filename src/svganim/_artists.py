@@ -57,20 +57,20 @@ def _is_gid(el: ET.Element) -> bool:
 
 def _extract(
     root: ET.Element,
-) -> tuple[dict[str, tuple[ET.Element, int]], dict[int, list[_Key]]]:
+) -> tuple[
+    dict[str, tuple[ET.Element, ET.Element]], list[tuple[ET.Element, list[_Key]]]
+]:
     """Cut the elements that carry a gid out of ``root``.
 
-    Returns ``{gid: (element, index of its parent)}`` and, for the index of every
-    parent, the order of its children as keys: a gid, or ``("s", j)`` for its j-th
-    ordinary child. The indices are positions in a walk of what is left of ``root``.
+    Returns ``{gid: (element, its parent)}`` and, for every parent, the order of its
+    children as keys: a gid, or ``("s", j)`` for its j-th ordinary child.
     """
-    found: dict[str, tuple[ET.Element, int]] = {}
-    orders: dict[int, list[_Key]] = {}
+    found: dict[str, tuple[ET.Element, ET.Element]] = {}
+    orders: list[tuple[ET.Element, list[_Key]]] = []
 
     def visit(el: ET.Element) -> None:
-        index = len(orders)
         keys: list[_Key] = []
-        orders[index] = keys
+        orders.append((el, keys))
         ordinary = 0
         for child in list(el):
             if child.tag == _DEFS:
@@ -79,7 +79,7 @@ def _extract(
                 gid = child.get("id", "")
                 if gid in found:
                     raise ValueError(f"the gid {gid!r} belongs to more than one artist")
-                found[gid] = (child, index)
+                found[gid] = (child, el)
                 keys.append(gid)
                 el.remove(child)
             else:
@@ -99,15 +99,12 @@ def _merge(order: list[_Key], keys: list[_Key]) -> None:
 
 
 def _put_back(
-    nodes: list[ET.Element],
-    orders: dict[int, list[_Key]],
-    elements: dict[str, ET.Element],
+    orders: dict[ET.Element, list[_Key]], elements: dict[str, ET.Element]
 ) -> None:
     """Return the cut elements to their parents, in the order of the frames."""
-    for index, order in orders.items():
+    for parent, order in orders.items():
         if all(isinstance(key, tuple) for key in order):
             continue  # nothing was cut out of this parent
-        parent = nodes[index]
         defs = [c for c in parent if c.tag == _DEFS]
         smil = [c for c in parent if c.tag in _SMIL]
         rest = [c for c in parent if c.tag != _DEFS and c.tag not in _SMIL]

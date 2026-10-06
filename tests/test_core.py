@@ -93,13 +93,16 @@ def test_scatter_animates_positions_and_colors():
     plt.close(fig)
 
 
-def test_structure_change_raises():
+def _scatter_with_fill_changing():
     fig, ax = plt.subplots()
-    ax.set_xlim(0, 5)
+    points = ax.scatter([0, 1], [0, 1])
+    # With no fill matplotlib draws each point as a path of its own, and with one it
+    # uses a shared marker: another kind of element in the same place.
+    return fig, lambda i: points.set_facecolor("none" if i == 0 else "tab:red")
 
-    def update(i):
-        ax.plot([0, 1], [0, i])
 
+def test_structure_change_raises():
+    fig, update = _scatter_with_fill_changing()
     with pytest.raises(ValueError, match="structure"):
         anim_to_svg(fig, update, n_frames=3)
     plt.close(fig)
@@ -287,11 +290,12 @@ def test_non_numeric_attributes_stay_stepwise():
 
 
 def test_structure_error_names_the_element():
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1])
-    # A longer title is more glyphs: the artist itself changes its elements.
-    with pytest.raises(ValueError, match=r"frame 1.*extra <use> in 'text_\d+'"):
-        anim_to_svg(fig, lambda i: ax.set_title("a" * (1 + i)), n_frames=3)
+    fig, update = _scatter_with_fill_changing()
+    match = (
+        r"frame 1.*found <g> in 'svganim-pathcollection-0' where the base has <path>"
+    )
+    with pytest.raises(ValueError, match=match):
+        anim_to_svg(fig, update, n_frames=3)
     plt.close(fig)
 
 
