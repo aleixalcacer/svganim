@@ -72,7 +72,10 @@ def anim_to_svg(
     update : callable
         Called as ``update(i)`` before frame ``i`` is rendered. It should modify
         existing artists (``set_data``, ``set_offsets``, ...) and not create or
-        remove any. Its return value is ignored.
+        remove any. Its return value is ignored. The picture must depend only on
+        ``i``: ``update`` is called once per frame, in order, so a function that
+        keeps state gives a different animation on every call. Compute a
+        simulation beforehand and let ``update`` show its state ``i``.
     n_frames : int
         Number of frames.
     fps : float, default 20
@@ -106,6 +109,11 @@ def anim_to_svg(
         (``imshow``, ``rasterized=True``), if the number or order of SVG elements
         changes between frames (the message names the element), or if a
         transform cannot be animated.
+
+    Notes
+    -----
+    ``update`` changes ``fig`` as it goes, so when the call returns the figure is
+    left as the last frame set it. Call ``update(0)`` to go back to the first one.
 
     Examples
     --------

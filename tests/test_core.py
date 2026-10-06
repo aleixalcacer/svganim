@@ -43,6 +43,19 @@ def test_notebook_display_is_an_img_with_the_svg():
     plt.close(fig)
 
 
+def test_figure_is_left_as_the_last_frame_set_it():
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 2 * np.pi, 100)
+    (line,) = ax.plot(x, np.sin(x))
+
+    def update(i):
+        line.set_ydata(np.sin(x + i / 10))
+
+    anim_to_svg(fig, update, n_frames=10)
+    assert np.allclose(line.get_ydata(), np.sin(x + 9 / 10))
+    plt.close(fig)
+
+
 def test_output_is_reproducible():
     fig, update = _wave()
     a = anim_to_svg(fig, update, n_frames=5)

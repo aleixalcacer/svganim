@@ -47,6 +47,15 @@ def update(i):
 A line whose data grows with `set_data` is fine: the path gets longer but it is
 still one element.
 
+`update` is called once per frame, in order, and the picture has to depend only
+on `i`. A function that keeps state, such as one that advances a simulation on
+every call, gives a different animation each time you call `anim_to_svg`. Compute
+the simulation first and let `update` show its state `i`, as the
+[k-means](examples/kmeans.md) and [bubble sort](examples/sorting.md) examples do.
+
+`update` changes `fig` as it goes, so when `anim_to_svg` returns the figure is
+left as the last frame set it. Call `update(0)` to go back to the first one.
+
 ## Notebooks and Quarto
 
 `anim_to_svg` returns a `str` subclass that Jupyter and Quarto know how to
