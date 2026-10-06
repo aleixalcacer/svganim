@@ -12,11 +12,25 @@ self-contained, looping, animated SVG.
 
 <img src="assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
 
-- Vector output: sharp at any size
-- No JavaScript: works in an `<img>` tag, in GitHub READMEs and in most docs
-- Only what changes is animated: static parts (axes, data) cost nothing
-- Reproducible output: same input, same bytes
-- Dependencies: matplotlib only
+## Why svganim
+
+- **A real image.** One SVG file that works in an `<img>` tag and in GitHub
+  READMEs. No JavaScript, no HTML page, no player.
+- **Vector.** Sharp at any size, unlike a GIF.
+- **Only what changes is animated.** Axes, labels and static data are written
+  once, so files stay small. For the same 60-frame figure we got 91 KiB, against
+  1.1 MiB from matplotlib's `HTMLWriter` with SVG frames.
+- **Reproducible.** Same code and matplotlib version, same bytes.
+
+What you give up: playback controls, and changes to the number of elements or
+the text between frames (see [Limitations](#limitations)). If you need those,
+use `HTMLWriter` or `to_jshtml`.
+
+## Install
+
+```bash
+pip install svganim
+```
 
 ## Usage
 
@@ -41,55 +55,53 @@ anim_to_svg(fig, update, n_frames=60, fps=20, hold=1.0, path="wave.svg")
 <img src="wave.svg" alt="A moving sine wave">
 ```
 
-See [examples/](examples/) for a runnable script and an HTML page that embeds
-the result with `<img>`.
+`update` must change artists that already exist (`set_data`, `set_offsets`,
+`set_color`, ...), not create or remove them. A line whose data grows is fine,
+so draw trails and curves with `set_data` on a single line.
 
-### `anim_to_svg(fig, update, n_frames, fps=20, hold=1.0, path=None, *, precision=3)`
+### `anim_to_svg(fig, update, n_frames, fps=20, hold=1.0, path=None, *, precision=3, interpolate=False)`
 
-| Argument    | Description                                                    |
-| ----------- | -------------------------------------------------------------- |
-| `fig`       | The matplotlib figure to render.                               |
-| `update`    | Called as `update(i)` before frame `i` is rendered.            |
-| `n_frames`  | Number of frames.                                              |
-| `fps`       | Frames per second.                                             |
-| `hold`      | Seconds to hold the last frame before looping.                 |
-| `path`      | If given, the SVG is also written to this file.                |
-| `precision` | Decimals kept in coordinates. Lower means smaller files.       |
+| Argument      | Description                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `fig`         | The matplotlib figure to render.                                                                                                          |
+| `update`      | Called as `update(i)` before frame `i` is rendered.                                                                                       |
+| `n_frames`    | Number of frames.                                                                                                                         |
+| `fps`         | Frames per second.                                                                                                                        |
+| `hold`        | Seconds to hold the last frame before looping.                                                                                            |
+| `path`        | If given, the SVG is also written to this file.                                                                                           |
+| `precision`   | Decimals kept in coordinates. Lower means smaller files.                                                                                  |
+| `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See [Smooth transitions](docs/usage.md#smooth-transitions). |
 
-Returns the SVG as a string.
+Returns the SVG as a string. Raises `ValueError` if the figure breaks a rule
+below; the message names the element that changed.
 
 ## How it works
 
-Every frame is rendered to SVG and the first one becomes the base document.
-The frames are then compared element by element. Wherever an attribute or an
-inline style property changes (`d`, `x`, `y`, `fill`, `transform`, ...), an
-`<animate>` child with one value per change is added. Elements that never
-change are left untouched.
+Each frame is rendered to SVG and the first one becomes the base document. Later
+frames are compared with it, and every attribute that changes gets a
+[SMIL](https://developer.mozilla.org/docs/Web/SVG/SMIL) animation. Elements that
+never change are left untouched.
 
 ## Limitations
 
-- The number and order of SVG elements must be identical in every frame, for
-  example the same number of lines and markers. Otherwise it raises
-  `ValueError`. Path vertex counts may change.
-- Text is rendered as glyphs and cannot be animated.
-- Vector only: raster images (`imshow`, `rasterized=True`) are rejected with
-  `ValueError`. Use `pcolormesh` for grids.
-- Transforms must be a single `translate`, `scale`, `rotate` or `skew`.
-- File size grows linearly with the number of frames and the number of
-  animated elements.
-- Animation uses SMIL, which all current browsers support.
+- The number of SVG elements must be the same in every frame: no new artists,
+  no changing text, no `imshow`.
+- There are no playback controls, only a loop.
 
-## License
+See [the docs](docs/usage.md#limitations) for the full list.
 
-MIT
+## Examples and docs
+
+See [examples/](examples/) for runnable scripts. The documentation has a gallery
+that explains each one, plus an API reference built from the docstrings.
 
 ## Development
 
 ```bash
-uv run pytest                                   # tests
-uv run sphinx-build -W docs docs/_build/html    # build the docs
-uv run sphinx-autobuild docs docs/_build/html   # live-reloading docs
+uv run pytest
+uv run sphinx-build -W docs docs/_build/html
 ```
 
-The API reference comes from the docstrings and the example animations are
-regenerated from `examples/` on every docs build.
+## License
+
+MIT
