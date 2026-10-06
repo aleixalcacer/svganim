@@ -24,9 +24,7 @@ self-contained, looping, animated SVG.
   READMEs. No JavaScript, no HTML page, no player.
 - **Vector.** Sharp at any size, unlike a GIF.
 - **Only what changes is animated.** Axes, labels and static data are written
-  once, so files stay small. For the same 60-frame figure we got 91 KiB, against
-  1.1 MiB from matplotlib's `HTMLWriter` with SVG frames. Web servers gzip SVG, so
-  what travels is 27 KiB against 114 KiB.
+  once, so files stay small.
 - **Reproducible.** Same code and matplotlib version, same bytes.
 
 What you give up: playback controls, and changes to the number of elements or
