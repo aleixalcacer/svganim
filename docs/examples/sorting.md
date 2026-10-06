@@ -17,7 +17,7 @@ Sixteen bars sorted with bubble sort, one frame per swap. The colour follows the
 
 Each bar's geometry (`d`) and colour (`fill`, `stroke`). A bar that does not change in a frame adds nothing for that frame, because only changes are stored.
 
-72 frames at 20 fps, about 26 KB.
+72 frames at 20 fps, about 26 KiB.
 
 ## Code
 

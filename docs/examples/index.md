@@ -51,8 +51,14 @@ Bars changing height and colour, one frame per swap.
 A chaotic trajectory drawn progressively.
 :::
 
+:::{grid-item-card} k-means
+:img-top: /_static/examples/kmeans.svg
+:link: kmeans
+:link-type: doc
+:class-card: sd-shadow-sm
 
-
+Centroids sliding while points fade to their new cluster.
+:::
 
 ::::
 
@@ -64,4 +70,5 @@ pendulum
 gradient_descent
 sorting
 lorenz
+kmeans
 ```

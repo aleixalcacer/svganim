@@ -17,7 +17,7 @@ A rod and a bob swinging for two periods. The angle is a cosine sampled over exa
 
 The rod's path (`d`) and the bob's position (`x`, `y`). It uses the small-angle approximation, not the full nonlinear equation.
 
-80 frames at 30 fps, about 7 KB.
+80 frames at 30 fps, about 7 KiB.
 
 ## Code
 

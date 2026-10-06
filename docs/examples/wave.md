@@ -17,7 +17,7 @@ The simplest animation: create the artists once and change their data in `update
 
 The line's path (`d`) and the markers' position (`x`, `y`). Axes, ticks and labels are written once and never touched.
 
-60 frames at 20 fps, about 91 KB.
+60 frames at 20 fps, about 91 KiB.
 
 ## Code
 

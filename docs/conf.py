@@ -42,6 +42,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable", None),
 }
 myst_enable_extensions = ["colon_fence"]
+myst_heading_anchors = 3
 
 html_theme = "furo"
 html_static_path = ["_static"]

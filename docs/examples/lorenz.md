@@ -17,7 +17,7 @@ The Lorenz system integrated with Euler steps and projected onto the x-z plane, 
 
 The trail's path (`d`) and the head's position (`x`, `y`).
 
-36 frames at 15 fps, about 170 KB. Growing paths are the expensive case, because every frame stores a longer path; `precision=1` keeps the size down.
+36 frames at 15 fps, about 170 KiB. Growing paths are the expensive case, because every frame stores a longer path; `precision=1` keeps the size down.
 
 ## Code
 
