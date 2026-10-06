@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-horizontal-dark.svg">
-    <img src="assets/logo-horizontal.svg" alt="svganim logo" width="360">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/aleixalcacer/svganim/main/assets/logo-horizontal-dark.svg">
+    <img src="https://raw.githubusercontent.com/aleixalcacer/svganim/main/assets/logo-horizontal.svg" alt="svganim logo" width="360">
   </picture>
 </div>
 
@@ -13,7 +13,7 @@ Turn a matplotlib figure and a per-frame update function into one
 self-contained, looping, animated SVG.
 
 <div align="center">
-  <img src="assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
+  <img src="https://raw.githubusercontent.com/aleixalcacer/svganim/main/assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
 </div>
 
 ## Why svganim
@@ -74,7 +74,7 @@ so draw trails and curves with `set_data` on a single line.
 | `hold`        | Seconds to hold the last frame before looping.                                                                                            |
 | `path`        | If given, the SVG is also written to this file.                                                                                           |
 | `precision`   | Decimals kept in coordinates. Lower means smaller files.                                                                                  |
-| `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See the [k-means example](docs/examples/kmeans.md). |
+| `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See the [k-means example](https://svganim.readthedocs.io/en/latest/examples/kmeans.html). |
 
 Returns the SVG as a string. Raises `ValueError` if the figure breaks a rule
 below; the message names the element that changed.
