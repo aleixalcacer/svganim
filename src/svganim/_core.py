@@ -7,10 +7,9 @@ from xml.etree import ElementTree as ET
 
 from matplotlib.figure import Figure
 
-from svganim._artists import _extract, _merge, _put_back, _Tagger, _Tracked
-from svganim._diff import _record_changes
-from svganim._smil import _animation
-from svganim._svg import _Defs, _props, _render, _tag, _walk
+from svganim._artists import _extract, _merge, _put_back, _Tagger
+from svganim._diff import _Tracked
+from svganim._svg import _Defs, _render
 
 
 class SvgAnimation(str):
@@ -115,57 +114,43 @@ def anim_to_svg(
     duration = n_frames / fps + hold
     times = [i / fps / duration for i in range(n_frames)]
 
-    # Each later frame is compared against the base and then discarded, so only
-    # the values that change are kept: {(element index, attribute): {frame: value}}.
-    # Artists are found by their gid instead, since they can come and go.
-    changes: dict[tuple[int, str], dict[int, str]] = {}
-    tracked: dict[str, _Tracked] = {}
-    orders: dict[int, list] = {}
+    # The document and each artist are followed separately, because artists can come
+    # and go: the document is what is left once they are cut out of a frame.
     tagger = _Tagger()
+    artists: dict[str, _Tracked] = {}
+    orders: dict[int, list] = {}
     try:
         for i in range(n_frames):
             update(i)
             tagger.tag(fig)
             root = _render(fig, precision, simplify)
+            # Definitions first: an artist can carry its own (a marker, for one), and
+            # they leave with it when it is cut out.
             if i == 0:
-                base, defs = root, _Defs(root)
+                defs = _Defs(root)
             else:
                 defs.merge(root)
             found, parents = _extract(root)
-            walked = list(_walk(root))
-            index = {id(el): k for k, (el, _) in enumerate(walked)}
-            for gid, (el, parent) in found.items():
-                if gid in tracked:
-                    tracked[gid].see(i, el, index[id(parent)])
-                else:
-                    tracked[gid] = _Tracked(i, el, index[id(parent)])
-            for parent, keys in parents:
-                _merge(orders.setdefault(index[id(parent)], []), keys)
             if i == 0:
-                base_walked = walked
-                base_props = [_props(el) for el, _ in walked]
+                document = _Tracked(0, root, 0)
             else:
-                _record_changes(changes, i, walked, base_walked, base_props)
+                document.see(i, root, 0)
+            for gid, (el, parent) in found.items():
+                if gid in artists:
+                    artists[gid].see(i, el, parent)
+                else:
+                    artists[gid] = _Tracked(i, el, parent)
+            for parent, keys in parents.items():
+                _merge(orders.setdefault(parent, []), keys)
     finally:
         tagger.restore()
 
-    nodes = [el for el, _ in base_walked]
-    for (idx, name), changed in sorted(changes.items()):
-        initial = base_props[idx][name]
-        values = [changed.get(i, initial) for i in range(n_frames)]
-        try:
-            animation = _animation(name, values, times, duration, interpolate)
-        except ValueError as err:
-            raise ValueError(
-                f"{err} (<{_tag(nodes[idx])}> in {base_walked[idx][1]!r})"
-            ) from None
-        nodes[idx].append(animation)
-
+    base = document.element(n_frames, times, duration, interpolate)
     elements = {
-        gid: art.element(n_frames, times, duration, interpolate)
-        for gid, art in tracked.items()
+        gid: artist.element(n_frames, times, duration, interpolate)
+        for gid, artist in artists.items()
     }
-    _put_back(nodes, orders, elements)
+    _put_back([node for node, _ in document.walked], orders, elements)
 
     svg = ET.tostring(base, encoding="unicode")
     if path is not None:

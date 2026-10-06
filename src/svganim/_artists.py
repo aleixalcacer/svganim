@@ -14,9 +14,7 @@ from xml.etree import ElementTree as ET
 from matplotlib.artist import Artist
 from matplotlib.figure import Figure
 
-from svganim._diff import _record_changes
-from svganim._smil import _animation
-from svganim._svg import _DEFS, SVG, _props, _tag, _walk
+from svganim._svg import _DEFS, SVG
 
 _SMIL = {f"{{{SVG}}}{name}" for name in ("animate", "animateTransform", "set")}
 
@@ -55,17 +53,20 @@ def _is_gid(el: ET.Element) -> bool:
 
 def _extract(
     root: ET.Element,
-) -> tuple[dict[str, tuple[ET.Element, ET.Element]], list[tuple[ET.Element, list]]]:
+) -> tuple[dict[str, tuple[ET.Element, int]], dict[int, list]]:
     """Cut the elements that carry a gid out of ``root``.
 
-    Returns ``{gid: (element, parent)}`` and, for every parent, the order of its
-    children as keys: a gid, or ``("s", j)`` for its j-th ordinary child.
+    Returns ``{gid: (element, index of its parent)}`` and, for the index of every
+    parent, the order of its children as keys: a gid, or ``("s", j)`` for its j-th
+    ordinary child. The indices are positions in a walk of what is left of ``root``.
     """
-    found: dict[str, tuple[ET.Element, ET.Element]] = {}
-    orders: list[tuple[ET.Element, list]] = []
+    found: dict[str, tuple[ET.Element, int]] = {}
+    orders: dict[int, list] = {}
 
     def visit(el: ET.Element) -> None:
-        keys: list = []
+        index = len(orders)
+        orders[index] = keys = []
+        ordinary = 0
         for child in list(el):
             if child.tag == _DEFS:
                 continue
@@ -73,13 +74,13 @@ def _extract(
                 gid = child.get("id", "")
                 if gid in found:
                     raise ValueError(f"the gid {gid!r} belongs to more than one artist")
-                found[gid] = (child, el)
+                found[gid] = (child, index)
                 keys.append(gid)
                 el.remove(child)
             else:
-                keys.append(("s", len([k for k in keys if isinstance(k, tuple)])))
+                keys.append(("s", ordinary))
+                ordinary += 1
                 visit(child)
-        orders.append((el, keys))
 
     visit(root)
     return found, orders
@@ -90,48 +91,6 @@ def _merge(order: list, keys: list) -> None:
     for n, key in enumerate(keys):
         if key not in order:
             order.insert(order.index(keys[n - 1]) + 1 if n else 0, key)
-
-
-class _Tracked:
-    """An artist met under the same gid in every frame in which it is drawn."""
-
-    def __init__(self, frame: int, el: ET.Element, parent: int) -> None:
-        self.el, self.parent, self.frames = el, parent, {frame}
-        self.walked = list(_walk(el))
-        self.props = [_props(node) for node, _ in self.walked]
-        self.changes: dict[tuple[int, str], dict[int, str]] = {}
-
-    def see(self, frame: int, el: ET.Element, parent: int) -> None:
-        if parent != self.parent:
-            gid = self.el.get("id")
-            raise ValueError(f"{gid!r} moves to another container in frame {frame}")
-        self.frames.add(frame)
-        _record_changes(self.changes, frame, list(_walk(el)), self.walked, self.props)
-
-    def element(
-        self, n_frames: int, times: list[float], duration: float, interpolate: bool
-    ) -> ET.Element:
-        """The element with its animations and the frames in which it is shown."""
-        for (idx, name), changed in sorted(self.changes.items()):
-            initial = last = self.props[idx][name]
-            values = []
-            for i in range(n_frames):
-                # While the artist is not drawn it keeps its last value, so it does
-                # not glide towards a made-up one in the frame before it disappears.
-                if i in self.frames:
-                    last = changed.get(i, initial)
-                values.append(last)
-            try:
-                animation = _animation(name, values, times, duration, interpolate)
-            except ValueError as err:
-                node, label = self.walked[idx]
-                raise ValueError(f"{err} (<{_tag(node)}> in {label!r})") from None
-            self.walked[idx][0].append(animation)
-        shown = ["visible" if i in self.frames else "hidden" for i in range(n_frames)]
-        if len(set(shown)) > 1:
-            self.el.set("visibility", shown[0])
-            self.el.append(_animation("visibility", shown, times, duration, False))
-        return self.el
 
 
 def _put_back(
