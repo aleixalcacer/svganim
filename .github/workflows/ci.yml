@@ -36,6 +36,19 @@ jobs:
       - uses: astral-sh/setup-uv@v10.2.0
       - run: uv run --python 3.12 ${{ matrix.args }} pytest
 
+  # Renders the animation in Chromium and compares each frame with the plain SVG
+  # that matplotlib draws for it.
+  browser:
+    runs-on: ubuntu-latest
+    env:
+      SVGANIM_REQUIRE_BROWSER: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv sync --group browser
+      - run: uv run playwright install --with-deps chromium-headless-shell
+      - run: uv run pytest tests/test_browser.py -v
+
   lint:
     runs-on: ubuntu-latest
     steps:

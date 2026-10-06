@@ -108,6 +108,9 @@ in Jupyter and Quarto.
 
 ```bash
 uv run pytest
+# the browser tests render every frame in Chromium, and are skipped without it
+uv run --group browser playwright install chromium-headless-shell
+uv run --group browser pytest tests/test_browser.py
 uv run sphinx-build -W docs docs/_build/html
 ```
 
