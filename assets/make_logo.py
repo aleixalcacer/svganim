@@ -43,7 +43,7 @@ HORIZONTAL_SIZE, HORIZONTAL_GAP = 170, 56
 
 
 def wordmark(size):
-    """Paths for "svg" and "anim", the offset of "anim" within "svganim", and the extents."""
+    """Paths for "svg" and "anim", the offset of "anim", and the extents."""
     full = TextPath((0, 0), "svganim", size=size, prop=FONT)
     anim = TextPath((0, 0), "anim", size=size, prop=FONT)
     svg = TextPath((0, 0), "svg", size=size, prop=FONT)
@@ -71,7 +71,9 @@ def layout_stacked():
 def layout_horizontal():
     svg, anim, anim_x, box = wordmark(HORIZONTAL_SIZE)
     shift = X1 + HORIZONTAL_GAP - box.x0
-    baseline = ICON_CENTER_Y + 0.26 * HORIZONTAL_SIZE  # centres the x-height on the wave
+    baseline = (
+        ICON_CENTER_Y + 0.26 * HORIZONTAL_SIZE
+    )  # centres the x-height on the wave
     text = (svg, shift, anim, shift + anim_x, baseline)
     top = min(Y0, baseline - box.y1)
     bottom = max(Y1, baseline - box.y0)
@@ -89,7 +91,9 @@ def clip_without(circles, bounds):
     """Clip path covering the whole canvas except the given (cx, cy, r) discs."""
     left, right, top, bottom = bounds
     box = MplPath.make_compound_path(
-        MplPath([(left, top), (right, top), (right, bottom), (left, bottom), (left, top)])
+        MplPath(
+            [(left, top), (right, top), (right, bottom), (left, bottom), (left, top)]
+        )
     )
     unit = MplPath.unit_circle()
     holes = [
@@ -120,7 +124,12 @@ def draw(name, theme, layout):
     x = np.linspace(22, 460, 400)
     y = 225 - 120 * np.cos(2 * np.pi * (x - 80) / 213)
     (wave,) = ax.plot(
-        x, y, color=theme["wave"], lw=22, solid_capstyle="round", solid_joinstyle="round"
+        x,
+        y,
+        color=theme["wave"],
+        lw=22,
+        solid_capstyle="round",
+        solid_joinstyle="round",
     )
     # Only the lead dot's halo reaches the wave. Overlapping holes would fill back in
     # (non-zero winding), so the others are left out.
@@ -129,11 +138,16 @@ def draw(name, theme, layout):
     # Each dot is cut by the halo of the dot to its left, leaving crescents.
     for i, (cx, r, color) in enumerate(dots):
         patch = ax.add_patch(Circle((cx, cy), r, color=color, lw=0))
-        patch.set_clip_path(clip_without(halos[max(i - 1, 0) : i], bounds), ax.transData)
+        patch.set_clip_path(
+            clip_without(halos[max(i - 1, 0) : i], bounds), ax.transData
+        )
 
     if text:
         svg, svg_x, anim, anim_x, baseline = text
-        for path, px, color in ((svg, svg_x, theme["word"][0]), (anim, anim_x, theme["word"][1])):
+        for path, px, color in (
+            (svg, svg_x, theme["word"][0]),
+            (anim, anim_x, theme["word"][1]),
+        ):
             flip = Affine2D().scale(1, -1).translate(px, baseline)
             ax.add_patch(PathPatch(path, fc=color, lw=0, transform=flip + ax.transData))
 

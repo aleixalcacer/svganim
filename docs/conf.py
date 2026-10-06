@@ -54,4 +54,3 @@ html_theme_options = {
 html_favicon = "_static/logo.svg"
 html_css_files = ["gallery.css"]
 exclude_patterns = ["_build"]
-
