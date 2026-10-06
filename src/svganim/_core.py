@@ -7,7 +7,7 @@ from xml.etree import ElementTree as ET
 
 from matplotlib.figure import Figure
 
-from svganim._artists import _extract, _merge, _put_back, _Tagger
+from svganim._artists import _extract, _Key, _merge, _put_back, _Tagger
 from svganim._diff import _Tracked
 from svganim._svg import _Defs, _render
 
@@ -118,7 +118,7 @@ def anim_to_svg(
     # and go: the document is what is left once they are cut out of a frame.
     tagger = _Tagger()
     artists: dict[str, _Tracked] = {}
-    orders: dict[int, list] = {}
+    orders: dict[int, list[_Key]] = {}
     try:
         for i in range(n_frames):
             update(i)

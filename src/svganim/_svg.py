@@ -29,8 +29,9 @@ def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
     # A fixed hash salt makes generated ids (clip paths, markers) deterministic.
     # Simplification changes the vertex count from frame to frame, which would
     # make paths impossible to interpolate, so it is off when interpolating.
-    rc = {"svg.hashsalt": "svganim", "svg.fonttype": "path", "path.simplify": simplify}
-    with mpl.rc_context(rc):
+    with mpl.rc_context(
+        {"svg.hashsalt": "svganim", "svg.fonttype": "path", "path.simplify": simplify}
+    ):
         buf = io.BytesIO()
         fig.savefig(buf, format="svg", metadata={"Date": None})
     root = ET.fromstring(buf.getvalue())

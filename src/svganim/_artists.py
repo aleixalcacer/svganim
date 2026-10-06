@@ -18,6 +18,10 @@ from svganim._svg import _DEFS, SVG
 
 _SMIL = {f"{{{SVG}}}{name}" for name in ("animate", "animateTransform", "set")}
 
+# How a child is told apart in the order of its parent: by its gid, or as the j-th of
+# the ordinary children, which are always in the same place.
+_Key = str | tuple[str, int]
+
 
 class _Tagger:
     """Gives every artist of a figure a gid, so that its element can be told apart.
@@ -47,13 +51,13 @@ class _Tagger:
 
 def _is_gid(el: ET.Element) -> bool:
     """Whether the id of ``el`` is a gid, not one of matplotlib's numbered ids."""
-    ident = el.get("id")
+    ident = el.get("id", "")
     return bool(ident) and re.search(r"_\d+$", ident) is None
 
 
 def _extract(
     root: ET.Element,
-) -> tuple[dict[str, tuple[ET.Element, int]], dict[int, list]]:
+) -> tuple[dict[str, tuple[ET.Element, int]], dict[int, list[_Key]]]:
     """Cut the elements that carry a gid out of ``root``.
 
     Returns ``{gid: (element, index of its parent)}`` and, for the index of every
@@ -61,11 +65,12 @@ def _extract(
     ordinary child. The indices are positions in a walk of what is left of ``root``.
     """
     found: dict[str, tuple[ET.Element, int]] = {}
-    orders: dict[int, list] = {}
+    orders: dict[int, list[_Key]] = {}
 
     def visit(el: ET.Element) -> None:
         index = len(orders)
-        orders[index] = keys = []
+        keys: list[_Key] = []
+        orders[index] = keys
         ordinary = 0
         for child in list(el):
             if child.tag == _DEFS:
@@ -86,7 +91,7 @@ def _extract(
     return found, orders
 
 
-def _merge(order: list, keys: list) -> None:
+def _merge(order: list[_Key], keys: list[_Key]) -> None:
     """Add to ``order`` the keys it lacks, each right after the key before it."""
     for n, key in enumerate(keys):
         if key not in order:
@@ -95,7 +100,7 @@ def _merge(order: list, keys: list) -> None:
 
 def _put_back(
     nodes: list[ET.Element],
-    orders: dict[int, list],
+    orders: dict[int, list[_Key]],
     elements: dict[str, ET.Element],
 ) -> None:
     """Return the cut elements to their parents, in the order of the frames."""
