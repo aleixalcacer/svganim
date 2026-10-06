@@ -64,9 +64,10 @@ In Jupyter and Quarto, end a cell with the call and the animation is displayed,
 also in the rendered HTML. Call `plt.close(fig)` first, or the notebook also
 shows matplotlib's static figure.
 
-`update` must change artists that already exist (`set_data`, `set_offsets`,
-`set_color`, ...), not create or remove them. A line whose data grows is fine,
-so draw trails and curves with `set_data` on a single line.
+`update` changes the artists (`set_data`, `set_offsets`, `set_color`, ...). A line
+whose data grows is fine, so draw trails and curves with `set_data` on a single
+line. Artists can also come and go: create them once and show or hide them with
+`set_visible`.
 
 ### `anim_to_svg(fig, update, n_frames, fps=20, hold=1.0, path=None, *, precision=3, interpolate=False)`
 
