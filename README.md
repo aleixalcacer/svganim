@@ -5,6 +5,10 @@
   </picture>
 </div>
 
+<div align="center">
+  <a href="https://svganim.readthedocs.io"><img src="https://readthedocs.org/projects/svganim/badge/?version=latest" alt="Documentation status"></a>
+</div>
+
 Turn a matplotlib figure and a per-frame update function into one
 self-contained, looping, animated SVG.
 
