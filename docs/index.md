@@ -15,6 +15,7 @@ self-contained, looping, animated SVG. No GIFs, no JavaScript. The source is on
 usage
 examples/index
 api
+releasing
 ```
 
 ## Install
