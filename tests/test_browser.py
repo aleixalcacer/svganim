@@ -49,6 +49,7 @@ def page():
 def _paint(page, svg, time=None):
     """Screenshot ``svg``, frozen at ``time`` seconds when it is animated."""
     page.set_content(f'<body style="margin:0;background:#fff">{svg}</body>')
+    page.add_style_tag(content="svg * { shape-rendering: crispEdges !important; }")
     page.evaluate(
         """time => {
             const svg = document.querySelector('svg');
@@ -70,16 +71,23 @@ def _plain_frame(page, fig, update, i, simplify):
     return _paint(page, buf.getvalue().decode())
 
 
-# Largest per-channel gap, out of 255, that still counts as anti-aliasing noise at
-# a marker or path edge. Chromium's rasteriser is not fully deterministic: over
-# about two thousand comparisons the gap was at most 10, and above 16 for no pixel.
-# A frame that is wrong differs by 34 to 255, over hundreds of pixels.
-NOISE = 16
+# The pictures are painted without anti-aliasing, so that they are compared pixel by
+# pixel and not shade by shade. Chromium smooths the edge of an animated element a
+# little differently from that of a static one, which is noise that no threshold on
+# the shades separates well. Without it the two pictures of a frame are identical,
+# except that a sub-pixel difference can flip a pixel at an edge, as it does for two
+# or three in a 3D scatter plot of overlapping markers. A wrong frame differs in
+# hundreds.
+FEW_PIXELS = 8
 
 
 def _difference(a, b):
     assert a.shape == b.shape
     return np.abs(a - b).max(axis=2)
+
+
+def _same(a, b):
+    return (_difference(a, b) > 0).sum() <= FEW_PIXELS
 
 
 # Ten frames at 10 fps with no hold last exactly one second, so the key times
@@ -193,6 +201,13 @@ def _line_artist():
     return fig, ax.plot(x, np.sin(x), lw=3)[0]
 
 
+def _zigzag_artist():
+    """A thick line with sharp corners, where the join of the stroke is plain to see."""
+    fig, ax = plt.subplots(figsize=(3, 2))
+    ax.set(xlim=(-0.5, 4.5), ylim=(-0.5, 2.5))
+    return fig, ax.plot([0, 1, 2, 3, 4], [0, 2, 0, 2, 0], lw=14)[0]
+
+
 def _scatter_artist():
     fig, ax = plt.subplots(figsize=(3, 2))
     return fig, ax.scatter(np.arange(5), np.arange(5) % 3, s=80)
@@ -240,7 +255,7 @@ PROPERTIES = {
         _cycle("butt", "round", "projecting"),
     ),
     "join style": _property_case(
-        _line_artist,
+        _zigzag_artist,
         lambda a, v: a.set_solid_joinstyle(v),
         _cycle("miter", "round", "bevel"),
     ),
@@ -402,7 +417,7 @@ def test_each_frame_is_painted_as_matplotlib_draws_it(page, name, interpolate):
         time = i / FPS + AFTER if interpolate else (i + 0.5) / FPS
         drawn = _paint(page, svg, time)
         expected = _plain_frame(page, fig, update, i, simplify=not interpolate)
-        assert _difference(drawn, expected).max() <= NOISE, f"frame {i} differs"
+        assert _same(drawn, expected), f"frame {i} differs"
     plt.close(fig)
 
 
@@ -411,7 +426,7 @@ def test_the_last_frame_is_held_before_the_loop_restarts(page):
     svg = anim_to_svg(fig, update, n, fps=FPS, hold=2.0, precision=6)
     held = _paint(page, svg, n / FPS + 1.0)
     expected = _plain_frame(page, fig, update, n - 1, simplify=True)
-    assert _difference(held, expected).max() <= NOISE
+    assert _same(held, expected)
     plt.close(fig)
 
 
@@ -481,7 +496,7 @@ def test_artists_created_and_removed_in_update(page, replace):
     svg = anim_to_svg(fig, recording, FRAMES, fps=FPS, hold=0, precision=6)
     for i in range(FRAMES):
         drawn = _paint(page, svg, (i + 0.5) / FPS)
-        assert _difference(drawn, _paint(page, plains[i])).max() <= NOISE, f"frame {i}"
+        assert _same(drawn, _paint(page, plains[i])), f"frame {i}"
     plt.close(fig)
 
 
@@ -498,5 +513,5 @@ def test_a_property_that_reaches_its_default_value_is_painted_right(
         time = i / n + AFTER if interpolate else (i + 0.5) / n
         drawn = _paint(page, svg, time)
         expected = _plain_frame(page, fig, update, i, simplify=not interpolate)
-        assert _difference(drawn, expected).max() <= NOISE, f"frame {i} differs"
+        assert _same(drawn, expected), f"frame {i} differs"
     plt.close(fig)

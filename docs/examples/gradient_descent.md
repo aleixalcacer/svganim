@@ -7,7 +7,7 @@ kernelspec:
 
 # Gradient descent
 
-**Focus: data that grows.** The number of elements cannot change between frames, but their data can: draw a trail as **one** line and extend it with `set_data`. Here gradient descent on f(x, y) = x² + 10y² zig-zags down a valley that is much steeper in `y` than in `x`. The filled contours are drawn once.
+**Focus: data that grows.** Draw a trail as **one** line and extend it with `set_data`, instead of adding a line for every step. Here gradient descent on f(x, y) = x² + 10y² zig-zags down a valley that is much steeper in `y` than in `x`. The filled contours are drawn once.
 
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
@@ -48,7 +48,7 @@ svg
 
 ## What svganim animates
 
-The trail's path (`d`) and the dot's position (`x`, `y`). The trail is **one** line whose data grows: its path gets longer, but the number of elements never changes, which is what svganim needs. Creating a new line per frame would raise `ValueError`.
+The trail's path (`d`) and the dot's position (`x`, `y`). The trail is **one** line whose data grows: its path gets longer, but it stays one element, which is much smaller than a new line in every frame.
 
 Most of the file is the static contour fills, which are written once.
 

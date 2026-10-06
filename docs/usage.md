@@ -78,11 +78,15 @@ you remove one from the middle with `interpolate=True`, the ones after it glide 
 the place of the next, which is only right if they all move that way. Keep their
 number fixed and hide the extra ones if they should stay where they are.
 
-What cannot change is the kind of element in a place. matplotlib sometimes draws
+## What cannot change
+
+The kind of element in a place cannot change. matplotlib sometimes draws
 an artist with other elements when its style changes, as recent versions do with a
 scatter plot whose face colour goes through `none`, and then a `ValueError` names
 the element. A transparent colour, such as `(1, 0, 0, 0)`, looks the same as `none`
 and is drawn with the same elements as any other colour, so use it instead.
+
+## Images
 
 Images, such as `imshow` or a colorbar, are kept as they are. One that does not
 change is written once, and one that changes in every frame is stored in every

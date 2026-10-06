@@ -81,15 +81,17 @@ line. Artists can also come and go: create them once and show or hide them with
 | `precision`   | Decimals kept in coordinates. Lower means smaller files.                                                                                  |
 | `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See the [k-means example](https://svganim.readthedocs.io/en/latest/examples/kmeans.html). |
 
-Returns the SVG as a string. Raises `ValueError` if the figure breaks a rule
-below; the message names the element that changed.
+Returns the SVG as a string, which displays itself as an animated image in Jupyter
+and Quarto. Raises `ValueError` for an invalid argument or when an element changes
+kind (see [Limitations](#limitations)); the message names the element.
 
 ## How it works
 
 Each frame is rendered to SVG and the first one becomes the base document. Later
 frames are compared with it, and every attribute that changes gets a
 [SMIL](https://developer.mozilla.org/docs/Web/SVG/SMIL) animation. Elements that
-never change are left untouched.
+never change are left untouched, and those that only some frames have, such as the
+letters of a text that changes length, are shown only in those.
 
 ## Limitations
 
@@ -97,6 +99,8 @@ never change are left untouched.
   changes (a scatter plot whose face colour goes through `none`, in recent
   versions: use a transparent colour instead).
 - There are no playback controls, only a loop.
+- The animations are checked against Chromium. SMIL is supported by all current
+  browsers, but other engines are not part of the tests yet.
 
 ## Examples and docs
 
@@ -112,6 +116,7 @@ uv run pytest
 uv run --group browser playwright install chromium-headless-shell
 uv run --group browser pytest tests/test_browser.py
 uv run sphinx-build -W docs docs/_build/html
+uv run ruff check && uv run ruff format --check && uv run mypy src
 ```
 
 ## License
