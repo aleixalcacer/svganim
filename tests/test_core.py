@@ -151,7 +151,7 @@ def test_bars_animate_geometry():
 
 
 def test_translate_uses_animate_transform():
-    from svganim._core import _animation
+    from svganim._smil import _animation
 
     el = _animation("transform", ["translate(1, 2)", "translate(3,4)"], [0, 0.5], 1)
     assert el.tag.endswith("animateTransform")
@@ -160,7 +160,7 @@ def test_translate_uses_animate_transform():
 
 
 def test_compound_transform_raises():
-    from svganim._core import _animation
+    from svganim._smil import _animation
 
     with pytest.raises(ValueError, match="compound"):
         _animation(
@@ -169,7 +169,7 @@ def test_compound_transform_raises():
 
 
 def test_changing_transform_type_raises():
-    from svganim._core import _animation
+    from svganim._smil import _animation
 
     with pytest.raises(ValueError, match="type"):
         _animation("transform", ["translate(1 2)", "scale(2)"], [0, 1], 1)
@@ -266,7 +266,7 @@ def test_keytimes_are_valid_for_every_animation():
 
 
 def test_translate_is_interpolated():
-    from svganim._core import _animation
+    from svganim._smil import _animation
 
     values = [f"translate({i} {2 * i})" for i in range(6)]
     times = [i / 6 for i in range(6)]
@@ -276,7 +276,7 @@ def test_translate_is_interpolated():
 
 
 def test_non_numeric_attributes_stay_stepwise():
-    from svganim._core import _animation
+    from svganim._smil import _animation
 
     for name, values in (
         ("clip-path", ["url(#a1)", "url(#b2)", "url(#c3)"]),
@@ -288,7 +288,113 @@ def test_non_numeric_attributes_stay_stepwise():
 
 def test_structure_error_names_the_element():
     fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    # A longer title is more glyphs: the artist itself changes its elements.
+    with pytest.raises(ValueError, match=r"frame 1.*extra <use> in 'text_\d+'"):
+        anim_to_svg(fig, lambda i: ax.set_title("a" * (1 + i)), n_frames=3)
+    plt.close(fig)
+
+
+def _visibility(svg):
+    """The values of the visibility animations in ``svg``."""
+    root = ET.fromstring(svg)
+    return [
+        el.get("values")
+        for el in root.iter("{http://www.w3.org/2000/svg}animate")
+        if el.get("attributeName") == "visibility"
+    ]
+
+
+def _two_lines():
+    fig, ax = plt.subplots()
     ax.set(xlim=(0, 5), ylim=(0, 5))
-    with pytest.raises(ValueError, match=r"frame 1.*found <g> in 'line2d_\d+'"):
-        anim_to_svg(fig, lambda i: ax.plot([0, 1], [0, i]), n_frames=3)
+    (base,) = ax.plot([0, 5], [1, 1])
+    (guest,) = ax.plot([0, 5], [3, 3])
+    return fig, ax, base, guest
+
+
+def test_hidden_artist_is_shown_from_its_frame():
+    fig, ax, base, guest = _two_lines()
+    svg = anim_to_svg(fig, lambda i: guest.set_visible(i >= 2), n_frames=4)
+    assert _visibility(svg) == ["hidden;visible"]
+    plt.close(fig)
+
+
+def test_artist_created_in_update_appears_when_it_is_created():
+    fig, ax, *_ = _two_lines()
+
+    def update(i):
+        if i == 2:
+            ax.plot([0, 5], [4, 4])
+
+    svg = anim_to_svg(fig, update, n_frames=4)
+    assert _visibility(svg) == ["hidden;visible"]
+    plt.close(fig)
+
+
+def test_removed_artist_is_hidden_afterwards():
+    fig, ax, base, guest = _two_lines()
+
+    def update(i):
+        if i == 2:
+            guest.remove()
+
+    svg = anim_to_svg(fig, update, n_frames=4)
+    assert _visibility(svg) == ["visible;hidden"]
+    plt.close(fig)
+
+
+def test_artists_that_stay_get_no_visibility_animation():
+    fig, ax, base, guest = _two_lines()
+    svg = anim_to_svg(fig, lambda i: guest.set_ydata([3 + i, 3 + i]), n_frames=3)
+    assert _visibility(svg) == []
+    plt.close(fig)
+
+
+def test_late_artist_is_drawn_on_top_of_the_others():
+    fig, ax, base, guest = _two_lines()
+    guest.set_gid("guest")
+    svg = anim_to_svg(fig, lambda i: guest.set_visible(i >= 1), n_frames=2)
+    # Later in the document is drawn on top: the guest comes after the base line,
+    # as it does in the frames where it is drawn.
+    assert svg.index('id="svganim-line2d-0"') < svg.index('id="guest"')
+    plt.close(fig)
+
+
+def test_gids_set_by_svganim_are_taken_off_again():
+    fig, ax, base, guest = _two_lines()
+    guest.set_gid("mine")
+    anim_to_svg(fig, lambda i: base.set_ydata([1 + i, 1 + i]), n_frames=3)
+    assert base.get_gid() is None  # svganim's own gid is gone
+    assert guest.get_gid() == "mine"  # the user's stays
+    plt.close(fig)
+
+
+def test_gid_set_by_the_user_is_the_id_of_the_element():
+    fig, ax, base, guest = _two_lines()
+    guest.set_gid("guest")
+    svg = anim_to_svg(fig, lambda i: guest.set_ydata([3 + i, 3 + i]), n_frames=3)
+    assert 'id="guest"' in svg
+    plt.close(fig)
+
+
+def test_gid_shared_by_two_artists_raises():
+    fig, ax, base, guest = _two_lines()
+    base.set_gid("same")
+    guest.set_gid("same")
+    with pytest.raises(ValueError, match="'same' belongs to more than one artist"):
+        anim_to_svg(fig, lambda i: None, n_frames=2)
+    plt.close(fig)
+
+
+def test_output_is_reproducible_when_artists_come_and_go():
+    fig, ax, base, guest = _two_lines()
+
+    def update(i):
+        guest.set_visible(i in (1, 2))
+        base.set_ydata([1 + i, 1 + i])
+
+    a = anim_to_svg(fig, update, n_frames=4)
+    b = anim_to_svg(fig, update, n_frames=4)
+    assert a == b
     plt.close(fig)

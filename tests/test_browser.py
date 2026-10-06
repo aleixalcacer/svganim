@@ -155,11 +155,30 @@ def _growing_trail():
     return fig, update, len(steps)
 
 
+def _coming_and_going():
+    """Dots that are drawn from their own frame on, and a line that blinks."""
+    fig, ax = plt.subplots(figsize=(5, 3))
+    ax.set(xlim=(0, 10), ylim=(0, 10))
+    x = np.linspace(0, 10, 50)
+    (wave,) = ax.plot(x, 5 + np.sin(x), color="0.6")
+    dots = [ax.plot([k + 0.5], [1 + 0.8 * k], "o")[0] for k in range(FRAMES)]
+    (blink,) = ax.plot(x, 8 - 0.1 * x, color="tab:red", lw=2)
+
+    def update(i):
+        wave.set_ydata(5 + np.sin(x + i / 2))
+        for k, dot in enumerate(dots):
+            dot.set_visible(k <= i)
+        blink.set_visible(i in (2, 3, 4, 7))
+
+    return fig, update, FRAMES
+
+
 SCENARIOS = {
     "wave": _wave,
     "bars": _bars,
     "clusters": _clusters,
     "growing trail": _growing_trail,
+    "coming and going": _coming_and_going,
 }
 
 
@@ -211,4 +230,51 @@ def test_default_precision_stays_close_to_the_plain_frame(page):
         drawn = _paint(page, svg, (i + 0.5) / FPS)
         difference = _difference(drawn, _plain_frame(page, fig, update, i, True))
         assert (difference > 32).mean() < 0.01
+    plt.close(fig)
+
+
+def _recording(fig, update, simplify):
+    """Wrap ``update`` so that each frame is also drawn plainly, as it happens.
+
+    ``update`` below creates and removes artists, so it cannot be called again
+    afterwards to redraw a frame: the figure would already be in its final state.
+    """
+    plains = []
+
+    def recording(i):
+        update(i)
+        buf = io.BytesIO()
+        with mpl.rc_context({"svg.fonttype": "path", "path.simplify": simplify}):
+            fig.savefig(buf, format="svg")
+        plains.append(buf.getvalue().decode())
+
+    return recording, plains
+
+
+@pytest.mark.parametrize("replace", [False, True], ids=["created", "redrawn"])
+def test_artists_created_and_removed_in_update(page, replace):
+    fig, ax = plt.subplots(figsize=(5, 3))
+    ax.set(xlim=(0, 10), ylim=(0, 10))
+    x = np.linspace(0, 10, 50)
+    ax.plot(x, 5 + np.sin(x), color="0.6")
+    made = {}
+
+    def update(i):
+        if replace:  # clear and draw again, which is how many people animate
+            if "line" in made:
+                made["line"].remove()
+            made["line"] = ax.plot(x, 2 + np.cos(x + i / 2), color="tab:red")[0]
+        else:
+            if i == 3:
+                made["a"] = ax.plot(x, 8 - 0.2 * x, color="tab:red", lw=2)[0]
+            if i == 5:
+                made["b"] = ax.scatter(x[::7], 1 + 0.5 * x[::7] % 3, color="tab:green")
+            if i == 8:
+                made["a"].remove()
+
+    recording, plains = _recording(fig, update, simplify=True)
+    svg = anim_to_svg(fig, recording, FRAMES, fps=FPS, hold=0, precision=6)
+    for i in range(FRAMES):
+        drawn = _paint(page, svg, (i + 0.5) / FPS)
+        assert _difference(drawn, _paint(page, plains[i])).max() <= NOISE, f"frame {i}"
     plt.close(fig)
