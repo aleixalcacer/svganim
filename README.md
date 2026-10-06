@@ -5,7 +5,6 @@
   </picture>
 </p>
 
-# svganim
 
 Turn a matplotlib figure and a per-frame update function into one
 self-contained, looping, animated SVG.
