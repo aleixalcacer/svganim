@@ -1,7 +1,8 @@
 # svganim
 
 Turn a matplotlib figure and a per-frame update function into one
-self-contained, looping, animated SVG. No GIFs, no JavaScript.
+self-contained, looping, animated SVG. No GIFs, no JavaScript. The source is on
+[GitHub](https://github.com/aleixalcacer/svganim).
 
 ```{image} _static/sorting.svg
 :alt: Bubble sort: sixteen bars changing height and colour
