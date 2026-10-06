@@ -25,6 +25,10 @@ dependencies = [
     "matplotlib>=3.10.9",
 ]
 
+[project.urls]
+Documentation = "https://svganim.readthedocs.io"
+Repository = "https://github.com/aleixalcacer/svganim"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
