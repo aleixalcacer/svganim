@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 from svganim import anim_to_svg
+from svganim._diff import _Tracked
 
 
 def _wave():
@@ -93,19 +94,20 @@ def test_scatter_animates_positions_and_colors():
     plt.close(fig)
 
 
-def _scatter_with_fill_changing():
-    fig, ax = plt.subplots()
-    points = ax.scatter([0, 1], [0, 1])
-    # With no fill matplotlib draws each point as a path of its own, and with one it
-    # uses a shared marker: another kind of element in the same place.
-    return fig, lambda i: points.set_facecolor("none" if i == 0 else "tab:red")
+def _artist_made_of(child):
+    """An artist group with a single child, to test the comparison by itself."""
+    svg = "http://www.w3.org/2000/svg"
+    return ET.fromstring(f'<g xmlns="{svg}" id="artist"><{child}/></g>')
 
 
-def test_structure_change_raises():
-    fig, update = _scatter_with_fill_changing()
-    with pytest.raises(ValueError, match="structure"):
-        anim_to_svg(fig, update, n_frames=3)
-    plt.close(fig)
+def test_a_changed_kind_of_element_raises_and_names_it():
+    # matplotlib sometimes draws an artist with other elements, depending on its
+    # style and version, so this is tested on elements made by hand.
+    tracked = _Tracked()
+    tracked.see(0, _artist_made_of("path"), None)
+    match = r"frame 1.*found <rect> in 'artist' where the base has <path>"
+    with pytest.raises(ValueError, match=match):
+        tracked.see(1, _artist_made_of("rect"), None)
 
 
 def test_invalid_arguments():
@@ -287,16 +289,6 @@ def test_non_numeric_attributes_stay_stepwise():
     ):
         el = _animation(name, values, [0, 0.3, 0.6], 1, interpolate=True)
         assert el.get("calcMode") == "discrete"
-
-
-def test_structure_error_names_the_element():
-    fig, update = _scatter_with_fill_changing()
-    match = (
-        r"frame 1.*found <g> in 'svganim-pathcollection-0' where the base has <path>"
-    )
-    with pytest.raises(ValueError, match=match):
-        anim_to_svg(fig, update, n_frames=3)
-    plt.close(fig)
 
 
 def _visibility(svg):

@@ -78,9 +78,10 @@ you remove one from the middle with `interpolate=True`, the ones after it glide 
 the place of the next, which is only right if they all move that way. Keep their
 number fixed and hide the extra ones if they should stay where they are.
 
-What cannot change is the kind of element in a place. A scatter plot whose face
-colour goes through `none` is drawn with other elements, and a `ValueError` names
-it.
+What cannot change is the kind of element in a place. matplotlib sometimes draws
+an artist with other elements when its style changes, as recent versions do with a
+scatter plot whose face colour goes through `none`, and then a `ValueError` names
+the element.
 
 ## Notebooks and Quarto
 

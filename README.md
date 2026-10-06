@@ -93,8 +93,9 @@ never change are left untouched.
 
 ## Limitations
 
-- An element cannot change kind: a scatter plot whose face colour goes through
-  `none` is drawn with other elements, and `imshow` is not supported.
+- An element cannot change kind, which matplotlib sometimes makes it do when a style
+  changes (a scatter plot whose face colour goes through `none`, in recent
+  versions), and `imshow` is not supported.
 - There are no playback controls, only a loop.
 
 ## Examples and docs
