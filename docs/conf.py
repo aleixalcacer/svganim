@@ -1,11 +1,10 @@
 """Sphinx configuration.
 
-The API reference is built from the docstrings, and the example animations are
-regenerated from ``examples/*.py`` on every build, so the docs follow the code.
+The API reference is built from the docstrings, and the examples are notebooks
+that are executed on every build, so the docs follow the code.
 """
 
 import os
-import runpy
 import shutil
 from importlib.metadata import version as _version
 from pathlib import Path
@@ -13,14 +12,13 @@ from pathlib import Path
 os.environ.setdefault("MPLBACKEND", "Agg")  # headless builds
 
 ROOT = Path(__file__).resolve().parent.parent
-EXAMPLES = ROOT / "examples"
 STATIC = Path(__file__).resolve().parent / "_static"
-GENERATED = STATIC / "examples"
 ASSETS = ROOT / "assets"
 
-# The logo lives in assets/ (the README uses it too); the theme reads it from _static.
-for _logo in ("logo.svg", "logo-text.svg", "logo-text-dark.svg"):
-    shutil.copy(ASSETS / _logo, STATIC / _logo)
+# The logos and the home animation live in assets/ (the README uses them too);
+# the theme and the pages read them from _static.
+for _asset in ("logo.svg", "logo-text.svg", "logo-text-dark.svg", "sorting.svg"):
+    shutil.copy(ASSETS / _asset, STATIC / _asset)
 
 project = "svganim"
 author = "Aleix Alcacer Sales"
@@ -31,7 +29,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
-    "myst_parser",
+    "myst_nb",
     "sphinx_design",
 ]
 autodoc_member_order = "bysource"
@@ -43,6 +41,8 @@ intersphinx_mapping = {
 }
 myst_enable_extensions = ["colon_fence"]
 myst_heading_anchors = 3
+nb_execution_mode = "force"  # always run the examples against the current code
+nb_execution_raise_on_error = True
 
 html_theme = "furo"
 html_static_path = ["_static"]
@@ -55,19 +55,3 @@ html_favicon = "_static/logo.svg"
 html_css_files = ["gallery.css"]
 exclude_patterns = ["_build"]
 
-
-def generate_examples(app):
-    """Run every example script and publish its SVG under ``_static/examples``."""
-    GENERATED.mkdir(parents=True, exist_ok=True)
-    cwd = Path.cwd()
-    os.chdir(EXAMPLES)  # scripts write their SVG with a relative path
-    try:
-        for script in sorted(EXAMPLES.glob("*.py")):
-            runpy.run_path(str(script), run_name="__main__")
-            shutil.copy(script.with_suffix(".svg"), GENERATED / f"{script.stem}.svg")
-    finally:
-        os.chdir(cwd)
-
-
-def setup(app):
-    app.connect("builder-inited", generate_examples)

@@ -8,13 +8,32 @@ that changes (`d`, `x`, `y`, `fill`, `transform`, ...) gets a SMIL animation.
 Elements that never change are left untouched, so axes, ticks and static data
 cost nothing.
 
-Frames are compared as they are rendered and then discarded, so memory stays
-roughly constant however many frames you ask for.
-
 ## Writing the update function
 
 Create your artists once, keep a reference to them and change them in
-`update(i)`:
+`update(i)`. A complete example:
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+from svganim import anim_to_svg
+
+fig, ax = plt.subplots()
+x = np.linspace(0, 2 * np.pi, 200)
+(line,) = ax.plot(x, np.sin(x))
+
+
+def update(i):
+    line.set_ydata(np.sin(x + i / 10))
+
+
+anim_to_svg(fig, update, n_frames=60, fps=20, path="wave.svg")
+```
+
+`update(i)` runs before frame `i` is rendered, so it only has to change what
+moves. The rule is that it changes existing artists and never adds or removes
+any:
 
 ```python
 (line,) = ax.plot(x, y)
@@ -28,38 +47,16 @@ def update(i):
 A line whose data grows with `set_data` is fine: the path gets longer but it is
 still one element.
 
-## Smooth transitions
+## Notebooks and Quarto
 
-By default the SVG switches between the frames you rendered. Pass
-`interpolate=True` to glide between them instead:
+`anim_to_svg` returns a `str` subclass that Jupyter and Quarto know how to
+display. End a cell with the call and the animation appears, also in the
+rendered HTML:
 
 ```python
-anim_to_svg(fig, update, n_frames=len(states), fps=2, interpolate=True)
+anim_to_svg(fig, update, n_frames=60)
 ```
 
-Numeric attributes (paths, positions, colours, opacities) are interpolated
-linearly from one frame to the next. In the [k-means example](examples/kmeans.md)
-the centroids slide to their new position and the points fade to their new
-colour. Attributes that cannot be interpolated keep switching stepwise: a path
-whose number of vertices changes, a `none` fill or a clip path.
-
-Use it when each frame is a state you want to move between, such as an
-iteration of an algorithm. Leave it off when the frames are already small steps
-of a continuous motion, where it adds nothing visible.
-
-It makes files larger, because svganim turns off matplotlib's path
-simplification (it changes the vertex count between frames, and such paths
-cannot be interpolated). The k-means example grows from 44 KiB to 47 KiB.
-
-## Limitations
-
-- The number and order of SVG elements must be identical in every frame, for
-  example the same number of lines and markers. Otherwise `ValueError` is
-  raised. Path vertex counts may change.
-- Text is rendered as glyphs and cannot be animated.
-- Transforms must be a single `translate`, `scale`, `rotate` or `skew`.
-- Output is vector only. Figures with raster images (`imshow`, `rasterized=True`)
-  are rejected with `ValueError`; use `pcolormesh` for grids instead.
-- File size grows linearly with the number of frames and the number of animated
-  elements.
-- Animation uses SMIL, which all current browsers support.
+Close the figure with `plt.close(fig)` first, or the notebook also shows
+matplotlib's static picture of it. svganim does not close it for you, so you can
+keep using `fig` afterwards.

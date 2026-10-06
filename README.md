@@ -70,7 +70,7 @@ so draw trails and curves with `set_data` on a single line.
 | `hold`        | Seconds to hold the last frame before looping.                                                                                            |
 | `path`        | If given, the SVG is also written to this file.                                                                                           |
 | `precision`   | Decimals kept in coordinates. Lower means smaller files.                                                                                  |
-| `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See [Smooth transitions](docs/usage.md#smooth-transitions). |
+| `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See the [k-means example](docs/examples/kmeans.md). |
 
 Returns the SVG as a string. Raises `ValueError` if the figure breaks a rule
 below; the message names the element that changed.
@@ -88,12 +88,11 @@ never change are left untouched.
   no changing text, no `imshow`.
 - There are no playback controls, only a loop.
 
-See [the docs](docs/usage.md#limitations) for the full list.
-
 ## Examples and docs
 
-See [examples/](examples/) for runnable scripts. The documentation has a gallery
-that explains each one, plus an API reference built from the docstrings.
+The documentation has a gallery of notebooks that explain each example, plus an
+API reference built from the docstrings. It also shows how animations display
+in Jupyter and Quarto.
 
 ## Development
 

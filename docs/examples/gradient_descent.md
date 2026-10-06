@@ -1,12 +1,45 @@
+---
+file_format: mystnb
+kernelspec:
+  name: python3
+  display_name: Python 3
+---
+
 # Gradient descent
 
-```{image} /_static/examples/gradient_descent.svg
-:alt: Gradient descent
-:width: 440px
-:align: center
+**Focus: data that grows.** The number of elements cannot change between frames, but their data can: draw a trail as **one** line and extend it with `set_data`. Here gradient descent on f(x, y) = x² + 10y² zig-zags down a valley that is much steeper in `y` than in `x`. The filled contours are drawn once.
+
+```{code-cell} ipython3
+import matplotlib.pyplot as plt
+import numpy as np
+
+from svganim import anim_to_svg
+
+x, y = np.meshgrid(np.linspace(-3, 3, 90), np.linspace(-1.5, 1.5, 45))
+p, steps = np.array([-2.8, 1.2]), []
+for _ in range(40):  # f(x, y) = x^2 + 10 y^2
+    steps.append(p)
+    p = p - 0.09 * np.array([2 * p[0], 20 * p[1]])
+steps = np.array(steps)
+
+fig, ax = plt.subplots(figsize=(5, 3))
+ax.contourf(x, y, x**2 + 10 * y**2, 12, cmap="Blues")
+(trail,) = ax.plot(*steps[:1].T, "-", color="k", lw=1)
+(dot,) = ax.plot(*steps[:1].T, "o", color="tab:red")
+
+def update(i):
+    trail.set_data(*steps[: i + 1].T)
+    dot.set_data(*steps[i : i + 1].T)
+
+plt.close(fig)  # otherwise the notebook also shows the static figure
+svg = anim_to_svg(fig, update, len(steps), fps=10)
 ```
 
-Gradient descent on f(x, y) = x² + 10y². The valley is much steeper in `y` than in `x`, so the optimizer zig-zags before settling at the minimum. The filled contours are drawn once.
+The result is a string that displays itself as an animated image:
+
+```{code-cell} ipython3
+svg
+```
 
 ## What changes in each frame
 
@@ -17,10 +50,12 @@ Gradient descent on f(x, y) = x² + 10y². The valley is much steeper in `y` tha
 
 The trail's path (`d`) and the dot's position (`x`, `y`). The trail is **one** line whose data grows: its path gets longer, but the number of elements never changes, which is what svganim needs. Creating a new line per frame would raise `ValueError`.
 
-40 frames at 10 fps, about 99 KiB. Most of the size (85 KiB) is the static contour fills.
+Most of the file is the static contour fills, which are written once.
 
-## Code
+```{code-cell} ipython3
+:tags: [remove-cell]
 
-```{literalinclude} /../examples/gradient_descent.py
-:language: python
+from myst_nb import glue
+
+glue("gradient_descent", svg, display=False)
 ```
