@@ -6,6 +6,8 @@
 </div>
 
 <div align="center">
+  <a href="https://pypi.org/project/svganim/"><img src="https://img.shields.io/pypi/v/svganim" alt="PyPI version"></a>
+  <a href="https://github.com/aleixalcacer/svganim/actions/workflows/ci.yml"><img src="https://github.com/aleixalcacer/svganim/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <a href="https://svganim.readthedocs.io"><img src="https://readthedocs.org/projects/svganim/badge/?version=latest" alt="Documentation status"></a>
 </div>
 
