@@ -1,15 +1,16 @@
-<p align="center">
+<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-horizontal-dark.svg">
     <img src="assets/logo-horizontal.svg" alt="svganim logo" width="360">
   </picture>
-</p>
-
+</div>
 
 Turn a matplotlib figure and a per-frame update function into one
 self-contained, looping, animated SVG.
 
-<img src="assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
+<div align="center">
+  <img src="assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
+</div>
 
 ## Why svganim
 
