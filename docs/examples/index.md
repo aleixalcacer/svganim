@@ -78,6 +78,18 @@ Points that show up one by one, and a ring at the end.
 A curve that grows while the axes rescale and the title counts.
 :::
 
+:::{grid-item-card} Heatmap
+:link: heatmap
+:link-type: doc
+:class-card: sd-shadow-sm
+
+```{glue:any} heatmap
+:doc: heatmap.md
+```
+
+Heat spreading over a plate, with its colorbar.
+:::
+
 :::{grid-item-card} Lorenz attractor
 :link: lorenz
 :link-type: doc
@@ -113,6 +125,7 @@ sorting
 gradient_descent
 appearing
 rescaling
+heatmap
 lorenz
 kmeans
 ```

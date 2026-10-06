@@ -346,6 +346,30 @@ def _growing_data_with_rescaling_axes():
     return fig, update, FRAMES
 
 
+def _animated_heatmap():
+    data = np.random.default_rng(5).random((FRAMES, 10, 10))
+    fig, ax = plt.subplots(figsize=(4, 3))
+    image = ax.imshow(data[0], vmin=0, vmax=1)
+    return fig, lambda i: image.set_data(data[i]), FRAMES
+
+
+def _heatmap_with_colorbar():
+    """The colorbar is an image too, and does not change."""
+    data = np.random.default_rng(6).random((FRAMES, 8, 8))
+    fig, ax = plt.subplots(figsize=(4, 3))
+    image = ax.imshow(data[0], vmin=0, vmax=1)
+    fig.colorbar(image)
+    return fig, lambda i: image.set_data(data[i]), FRAMES
+
+
+def _rotating_surface():
+    fig = plt.figure(figsize=(3, 3))
+    ax = fig.add_subplot(projection="3d")
+    x, y = np.meshgrid(np.linspace(-2, 2, 12), np.linspace(-2, 2, 12))
+    ax.plot_surface(x, y, np.sin(x) * np.cos(y), cmap="viridis")
+    return fig, lambda i: ax.view_init(elev=25, azim=36 * i), FRAMES
+
+
 SCENARIOS = {
     "wave": _wave,
     "bars": _bars,
@@ -357,6 +381,9 @@ SCENARIOS = {
     "growing markers": _growing_markers,
     "zooming axes": _zooming_axes,
     "rescaling axes": _growing_data_with_rescaling_axes,
+    "animated heatmap": _animated_heatmap,
+    "heatmap with colorbar": _heatmap_with_colorbar,
+    "rotating 3D surface": _rotating_surface,
 }
 
 

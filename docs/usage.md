@@ -84,6 +84,11 @@ scatter plot whose face colour goes through `none`, and then a `ValueError` name
 the element. A transparent colour, such as `(1, 0, 0, 0)`, looks the same as `none`
 and is drawn with the same elements as any other colour, so use it instead.
 
+Images, such as `imshow` or a colorbar, are kept as they are. One that does not
+change is written once, and one that changes in every frame is stored in every
+frame, so a heatmap animation grows with the size of its array and the number of
+frames. The [heatmap](examples/heatmap.md) example shows one.
+
 ## Notebooks and Quarto
 
 `anim_to_svg` returns a `str` subclass that Jupyter and Quarto know how to

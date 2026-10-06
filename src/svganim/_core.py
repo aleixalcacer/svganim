@@ -85,8 +85,7 @@ def anim_to_svg(
     Raises
     ------
     ValueError
-        If an argument is out of range, if the figure contains raster images
-        (``imshow``, ``rasterized=True``), if an element is of another kind than it
+        If an argument is out of range, if an element is of another kind than it
         was in the first frame that has it (the message names the element), if two
         artists share a gid, or if a transform cannot be animated.
 

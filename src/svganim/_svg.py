@@ -15,7 +15,6 @@ ET.register_namespace("", SVG)
 ET.register_namespace("xlink", XLINK)
 
 _DEFS = f"{{{SVG}}}defs"
-_IMAGE = f"{{{SVG}}}image"
 _METADATA = f"{{{SVG}}}metadata"
 
 # Attributes whose numbers are rounded to `precision` decimals.
@@ -35,12 +34,6 @@ def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
         buf = io.BytesIO()
         fig.savefig(buf, format="svg", metadata={"Date": None})
     root = ET.fromstring(buf.getvalue())
-    if next(root.iter(_IMAGE), None) is not None:
-        raise ValueError(
-            "the figure contains raster images (imshow, rasterized artists, ...); "
-            "svganim only produces vector output. Use pcolormesh instead of imshow "
-            "and remove rasterized=True"
-        )
     for child in root.findall(_METADATA):
         root.remove(child)
     for el in list(root.iter()):

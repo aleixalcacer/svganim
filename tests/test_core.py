@@ -117,19 +117,38 @@ def test_invalid_arguments():
     plt.close(fig)
 
 
-def test_raster_images_are_rejected():
+def _animated(svg):
+    """The names of the attributes that ``svg`` animates."""
+    root = ET.fromstring(svg)
+    return {el.get("attributeName") for el in root.iter() if el.tag.endswith("animate")}
+
+
+def test_an_image_that_does_not_change_is_written_once():
     fig, ax = plt.subplots()
     ax.imshow(np.zeros((4, 4)))
-    with pytest.raises(ValueError, match="raster"):
-        anim_to_svg(fig, lambda i: None, n_frames=2)
+    (line,) = ax.plot([0, 3], [0, 3], "w")
+    svg = anim_to_svg(fig, lambda i: line.set_ydata([0, 3 - i]), n_frames=4)
+    assert svg.count("data:image/png") == 1
+    assert "xlink:href" not in _animated(svg)
     plt.close(fig)
 
 
-def test_rasterized_artists_are_rejected():
+def test_an_image_that_changes_is_kept_for_each_frame_and_shown_in_its_own():
+    # matplotlib names an image after a hash of its data, so a new image is a new
+    # artist: it is drawn in the frame that has it.
     fig, ax = plt.subplots()
-    ax.scatter([0, 1], [0, 1], rasterized=True)
-    with pytest.raises(ValueError, match="raster"):
-        anim_to_svg(fig, lambda i: None, n_frames=2)
+    image = ax.imshow(np.zeros((4, 4)), vmin=0, vmax=3)
+    svg = anim_to_svg(fig, lambda i: image.set_data(np.full((4, 4), i)), n_frames=4)
+    assert svg.count("data:image/png") == 4
+    assert len(_visibility(svg)) == 4
+    plt.close(fig)
+
+
+def test_a_rasterized_artist_is_kept_as_an_image():
+    fig, ax = plt.subplots()
+    points = ax.scatter([0, 1], [0, 1], rasterized=True)
+    svg = anim_to_svg(fig, lambda i: points.set_offsets([[0, i], [1, 1]]), n_frames=3)
+    assert "data:image/png" in svg
     plt.close(fig)
 
 
