@@ -81,7 +81,8 @@ number fixed and hide the extra ones if they should stay where they are.
 What cannot change is the kind of element in a place. matplotlib sometimes draws
 an artist with other elements when its style changes, as recent versions do with a
 scatter plot whose face colour goes through `none`, and then a `ValueError` names
-the element.
+the element. A transparent colour, such as `(1, 0, 0, 0)`, looks the same as `none`
+and is drawn with the same elements as any other colour, so use it instead.
 
 ## Notebooks and Quarto
 

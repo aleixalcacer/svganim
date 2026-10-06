@@ -95,7 +95,7 @@ never change are left untouched.
 
 - An element cannot change kind, which matplotlib sometimes makes it do when a style
   changes (a scatter plot whose face colour goes through `none`, in recent
-  versions), and `imshow` is not supported.
+  versions: use a transparent colour instead), and `imshow` is not supported.
 - There are no playback controls, only a loop.
 
 ## Examples and docs
