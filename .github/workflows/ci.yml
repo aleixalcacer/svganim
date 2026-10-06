@@ -18,6 +18,19 @@ jobs:
       - run: uv sync --python ${{ matrix.python-version }}
       - run: uv run pytest
 
+  # The paths and the files are the part that can depend on the system.
+  os:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv run --python 3.12 pytest
+
   # The code leans on matplotlib's SVG backend, so test both ends of the supported
   # range: the oldest version pyproject.toml allows and the newest release.
   matplotlib:
