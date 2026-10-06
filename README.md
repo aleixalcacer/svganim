@@ -27,8 +27,8 @@ self-contained, looping, animated SVG.
   once, so files stay small.
 - **Reproducible.** Same code and matplotlib version, same bytes.
 
-What you give up: playback controls, and changes to the number of elements or
-the text between frames (see [Limitations](#limitations)). If you need those,
+What you give up: playback controls, and changes to the number of elements inside
+an artist, such as text that grows (see [Limitations](#limitations)). If you need those,
 use `HTMLWriter` or `to_jshtml`.
 
 ## Install
@@ -93,8 +93,9 @@ never change are left untouched.
 
 ## Limitations
 
-- The number of SVG elements must be the same in every frame: no new artists,
-  no changing text, no `imshow`.
+- Artists can appear and disappear, but the number of SVG elements inside an
+  artist must stay the same: no text that changes length, no axis limits that
+  change the ticks, no `imshow`.
 - There are no playback controls, only a loop.
 
 ## Examples and docs

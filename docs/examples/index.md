@@ -54,6 +54,18 @@ Bars changing height and colour, one frame per swap.
 An optimizer zig-zagging down a narrow valley.
 :::
 
+:::{grid-item-card} Appearing points
+:link: appearing
+:link-type: doc
+:class-card: sd-shadow-sm
+
+```{glue:any} appearing
+:doc: appearing.md
+```
+
+Points that show up one by one, and a ring at the end.
+:::
+
 :::{grid-item-card} Lorenz attractor
 :link: lorenz
 :link-type: doc
@@ -87,6 +99,7 @@ wave
 pendulum
 sorting
 gradient_descent
+appearing
 lorenz
 kmeans
 ```
