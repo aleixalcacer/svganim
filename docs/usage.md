@@ -59,7 +59,7 @@ def update(i):
     label.set_visible(i >= 30)  # drawn from frame 30 on
 ```
 
-The [appearing points](examples/appearing.md) example does it for sixteen points.
+The [constellation](examples/constellation.md) example does it with stars and lines.
 
 Creating or removing artists inside `update` works too, but then `update` depends
 on how many times it has run: a second call to `anim_to_svg` starts with the

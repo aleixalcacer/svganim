@@ -54,16 +54,16 @@ Bars changing height and colour, one frame per swap.
 An optimizer zig-zagging down a narrow valley.
 :::
 
-:::{grid-item-card} Appearing points
-:link: appearing
+:::{grid-item-card} Constellation
+:link: constellation
 :link-type: doc
 :class-card: sd-shadow-sm
 
-```{glue:any} appearing
-:doc: appearing.md
+```{glue:any} constellation
+:doc: constellation.md
 ```
 
-Points that show up one by one, and a ring at the end.
+Cassiopeia drawn star by star over a night sky.
 :::
 
 :::{grid-item-card} Rescaling axes
@@ -75,7 +75,7 @@ Points that show up one by one, and a ring at the end.
 :doc: rescaling.md
 ```
 
-A curve that grows while the axes rescale and the title counts.
+A random walk that grows while the axes rescale and the title counts.
 :::
 
 :::{grid-item-card} Heatmap
@@ -123,7 +123,7 @@ wave
 pendulum
 sorting
 gradient_descent
-appearing
+constellation
 rescaling
 heatmap
 lorenz
