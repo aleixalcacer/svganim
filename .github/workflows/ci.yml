@@ -18,6 +18,24 @@ jobs:
       - run: uv sync --python ${{ matrix.python-version }}
       - run: uv run pytest
 
+  # The code leans on matplotlib's SVG backend, so test both ends of the supported
+  # range: the oldest version pyproject.toml allows and the newest release.
+  matplotlib:
+    name: matplotlib (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: oldest
+            args: --resolution lowest-direct
+          - name: latest
+            args: --upgrade-package matplotlib
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv run --python 3.12 ${{ matrix.args }} pytest
+
   lint:
     runs-on: ubuntu-latest
     steps:
