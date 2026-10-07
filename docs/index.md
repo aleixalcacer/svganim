@@ -1,8 +1,7 @@
 # svganim
 
-Turn a matplotlib figure and a per-frame update function into one
-self-contained, looping, animated SVG. No GIFs, no JavaScript. The source is on
-[GitHub](https://github.com/aleixalcacer/svganim).
+Turn a matplotlib animation into one self-contained, looping, animated SVG. No
+GIFs, no JavaScript. The source is on [GitHub](https://github.com/aleixalcacer/svganim).
 
 ```{image} _static/sorting.svg
 :alt: Bubble sort: sixteen bars changing height and colour
@@ -26,10 +25,14 @@ pip install svganim
 
 ## Quick start
 
+Keep your `FuncAnimation` as it is and save it with `SvgAnimWriter`:
+
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-from svganim import anim_to_svg
+from matplotlib.animation import FuncAnimation
+
+from svganim import SvgAnimWriter
 
 fig, ax = plt.subplots()
 x = np.linspace(0, 2 * np.pi, 200)
@@ -40,7 +43,8 @@ def update(i):
     line.set_ydata(np.sin(x + i / 10))
 
 
-anim_to_svg(fig, update, n_frames=60, fps=20, path="wave.svg")
+ani = FuncAnimation(fig, update, frames=60)
+ani.save("wave.svg", writer=SvgAnimWriter(fps=20))
 ```
 
 Embed the result anywhere an image goes:

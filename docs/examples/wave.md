@@ -7,13 +7,14 @@ kernelspec:
 
 # Sine wave
 
-**Focus: the basic idea.** Create the artists once, change their data in `update`, and svganim animates only what changes. Here a line and two scatter markers move at the same time.
+**Focus: the basic idea.** Create the artists once, change their data in `update`, and svganim animates only what changes. `ani_to_svg` turns any `FuncAnimation` into an SVG without changing it. Here a line and two scatter markers move at the same time.
 
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 fig, ax = plt.subplots(figsize=(5, 3))
 x = np.linspace(0, 2 * np.pi, 200)
@@ -26,10 +27,11 @@ def update(i):
     sc.set_offsets([[1 + i / 20, 0.5], [2, -0.5 + i / 60]])
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, n_frames=60, fps=20, hold=1.0)
+ani = FuncAnimation(fig, update, frames=60)
+svg = ani_to_svg(ani, fps=20, hold=1)
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg

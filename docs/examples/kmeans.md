@@ -12,8 +12,9 @@ kernelspec:
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 rng = np.random.default_rng(0)
 X = np.vstack([rng.normal(c, 0.8, (60, 2)) for c in ([0, 0], [4, 1], [1, 4])])
@@ -41,16 +42,17 @@ def update(i):
     stars.set_offsets(centers)
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, len(states), fps=1.5, interpolate=True)
+ani = FuncAnimation(fig, update, frames=len(states))
+svg = ani_to_svg(ani, fps=1.5, interpolate=True)
 ```
 
 For comparison, the same figure without `interpolate`, which switches abruptly between states:
 
 ```{code-cell} ipython3
-anim_to_svg(fig, update, len(states), fps=1.5)
+ani_to_svg(ani, fps=1.5)
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg

@@ -11,8 +11,7 @@
   <a href="https://svganim.readthedocs.io"><img src="https://readthedocs.org/projects/svganim/badge/?version=latest" alt="Documentation status"></a>
 </div>
 
-Turn a matplotlib figure and a per-frame update function into one
-self-contained, looping, animated SVG.
+Turn a matplotlib animation into one self-contained, looping, animated SVG.
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/aleixalcacer/svganim/main/assets/sorting.svg" alt="Bubble sort: sixteen bars changing height and colour">
@@ -38,10 +37,15 @@ pip install svganim
 
 ## Usage
 
+Keep your `FuncAnimation` (or `ArtistAnimation`) as it is and save it with the
+`SvgAnimWriter`:
+
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-from svganim import anim_to_svg
+from matplotlib.animation import FuncAnimation
+
+from svganim import SvgAnimWriter
 
 fig, ax = plt.subplots()
 x = np.linspace(0, 2 * np.pi, 200)
@@ -52,38 +56,40 @@ def update(i):
     line.set_ydata(np.sin(x + i / 10))
 
 
-anim_to_svg(fig, update, n_frames=60, fps=20, hold=1.0, path="wave.svg")
+ani = FuncAnimation(fig, update, frames=60)
+ani.save("wave.svg", writer=SvgAnimWriter(fps=20))
 ```
 
 ```html
 <img src="wave.svg" alt="A moving sine wave">
 ```
 
-In Jupyter and Quarto, end a cell with the call and the animation is displayed,
-also in the rendered HTML. Call `plt.close(fig)` first, or the notebook also
-shows matplotlib's static figure.
+The options go in the writer: `SvgAnimWriter(fps=20, interpolate=True)`. Importing
+svganim also registers it under the name `"svganim"`, so
+`ani.save("wave.svg", writer="svganim", fps=20)` works too.
+
+In Jupyter and Quarto, `ani_to_svg(ani, fps=20)` returns the SVG as a string that
+is displayed as an animated image when it ends a cell. Call `plt.close(fig)` first,
+or the notebook also shows matplotlib's static figure.
 
 `update` changes the artists (`set_data`, `set_offsets`, `set_color`, ...). A line
 whose data grows is fine, so draw trails and curves with `set_data` on a single
 line. Artists can also come and go: create them once and show or hide them with
 `set_visible`.
 
-### `anim_to_svg(fig, update, n_frames, fps=20, hold=1.0, path=None, *, precision=3, interpolate=False)`
+### `SvgAnimWriter(fps=5, *, hold=0, precision=3, interpolate=False)`
 
 | Argument      | Description                                                                                                                               |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `fig`         | The matplotlib figure to render.                                                                                                          |
-| `update`      | Called as `update(i)` before frame `i` is rendered.                                                                                       |
-| `n_frames`    | Number of frames.                                                                                                                         |
 | `fps`         | Frames per second.                                                                                                                        |
 | `hold`        | Seconds to hold the last frame before looping.                                                                                            |
-| `path`        | If given, the SVG is also written to this file.                                                                                           |
 | `precision`   | Decimals kept in coordinates. Lower means smaller files.                                                                                  |
 | `interpolate` | If `True`, shapes glide and colours fade between frames instead of switching. See the [k-means example](https://svganim.readthedocs.io/en/latest/examples/kmeans.html). |
 
-Returns the SVG as a string, which displays itself as an animated image in Jupyter
-and Quarto. Raises `ValueError` for an invalid argument or when an element changes
-kind (see [Limitations](#limitations)); the message names the element.
+`ani_to_svg(ani, fps=5, hold=0, *, precision=3, interpolate=False)`
+takes the same options and returns the SVG as a string. Both raise `ValueError`
+for an invalid argument or when an element changes kind (see
+[Limitations](#limitations)); the message names the element.
 
 ## How it works
 

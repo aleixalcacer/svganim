@@ -12,8 +12,9 @@ kernelspec:
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 rng = np.random.default_rng(7)
 sky = rng.random((90, 2))
@@ -37,10 +38,11 @@ def update(i):
 
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, len(stars), fps=2, hold=2)
+ani = FuncAnimation(fig, update, frames=len(stars))
+svg = ani_to_svg(ani, fps=2, hold=2)
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg
@@ -53,7 +55,7 @@ svg
 
 ## What svganim animates
 
-The `visibility` of each star, its glow and each line. The sky and the rest of the figure are written once. Hiding and showing keeps `update` repeatable: calling `anim_to_svg` again gives the same animation, which would not hold if `update` created the artists as it went.
+The `visibility` of each star, its glow and each line. The sky and the rest of the figure are written once. Hiding and showing keeps `update` repeatable: saving again gives the same animation, which would not hold if `update` created the artists as it went.
 
 ```{code-cell} ipython3
 :tags: [remove-cell]

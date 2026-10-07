@@ -9,16 +9,17 @@ Elements that never change are left untouched, so axes, ticks and static data
 cost nothing. Artists are matched from frame to frame by a gid, so they can also
 appear and disappear.
 
-## Writing the update function
+## Saving an animation
 
-Create your artists once, keep a reference to them and change them in
-`update(i)`. A complete example:
+Write your animation as usual, with `FuncAnimation` or `ArtistAnimation`, and save
+it with the `svganim` writer. Importing svganim registers it by name:
 
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+import svganim  # registers the "svganim" writer
 
 fig, ax = plt.subplots()
 x = np.linspace(0, 2 * np.pi, 200)
@@ -29,21 +30,29 @@ def update(i):
     line.set_ydata(np.sin(x + i / 10))
 
 
-anim_to_svg(fig, update, n_frames=60, fps=20, path="wave.svg")
+ani = FuncAnimation(fig, update, frames=60)
+ani.save("wave.svg", writer="svganim", fps=20)
 ```
 
-`update(i)` runs before frame `i` is rendered, so it only has to change what
-moves. A line whose data grows with `set_data` is fine: the path gets longer but
-it is still one element.
+Create your artists once, keep a reference to them and change them in `update`. A
+line whose data grows with `set_data` is fine: the path gets longer but it is
+still one element.
 
-`update` is called once per frame, in order, and the picture has to depend only
-on `i`. A function that keeps state, such as one that advances a simulation on
-every call, gives a different animation each time you call `anim_to_svg`. Compute
-the simulation first and let `update` show its state `i`, as the
-[k-means](examples/kmeans.md) and [bubble sort](examples/sorting.md) examples do.
+To set options, pass an instance: `SvgAnimWriter(fps=20, interpolate=True)` takes
+`hold`, `precision` and `interpolate`. With an instance, `fps` goes to the writer,
+because `save` refuses one of its own. With the name, `save(fps=...)` sets it, and
+without one matplotlib takes it from the animation's interval. By default the
+animation lasts `n_frames / fps`, as with any matplotlib writer; `hold` adds seconds
+on the last frame before it loops.
 
-`update` changes `fig` as it goes, so when `anim_to_svg` returns the figure is
-left as the last frame set it. Call `update(0)` to go back to the first one.
+matplotlib decides which frames are drawn: `frames` can be a number, a list of
+objects or a generator, and `fargs` and `init_func` work as usual. A generator
+without `save_count` is cut at matplotlib's default. `bbox_inches="tight"` is
+ignored by `Animation.save`, since the crop would change from frame to frame. Only
+`save` is supported: `to_html5_video` and `to_jshtml` are not.
+
+`ani` changes `fig` as it goes, so when `save` returns the figure is left as the
+last frame set it. If the animation raises, no file is written.
 
 ## Artists that come and go
 
@@ -62,8 +71,8 @@ def update(i):
 The [constellation](examples/constellation.md) example does it with stars and lines.
 
 Creating or removing artists inside `update` works too, but then `update` depends
-on how many times it has run: a second call to `anim_to_svg` starts with the
-artists the first one left behind. Showing and hiding does not have that problem.
+on how many times it has run: a second `save` starts with the artists the first
+one left behind. Showing and hiding does not have that problem.
 
 To follow each artist from frame to frame, svganim gives it a gid while it works
 and takes it off at the end. A gid you set yourself with `set_gid` is kept, and
@@ -95,13 +104,16 @@ frames. The [heatmap](examples/heatmap.md) example shows one.
 
 ## Notebooks and Quarto
 
-`anim_to_svg` returns a `str` subclass that Jupyter and Quarto know how to
-display. End a cell with the call and the animation appears, also in the
-rendered HTML:
+`ani_to_svg` does what `save` does and returns the SVG as a `str` subclass that
+Jupyter and Quarto know how to display. End a cell with the call and the animation
+appears, also in the rendered HTML:
 
 ```python
-anim_to_svg(fig, update, n_frames=60)
+ani_to_svg(ani, fps=20)
 ```
+
+It takes the writer's options (`hold`, `precision`, `interpolate`). Unlike `save`,
+`fps` does not default to the animation's interval. To write a file, use `save`.
 
 Close the figure with `plt.close(fig)` first, or the notebook also shows
 matplotlib's static picture of it. svganim does not close it for you, so you can

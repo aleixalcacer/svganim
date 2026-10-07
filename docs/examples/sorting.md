@@ -12,8 +12,9 @@ kernelspec:
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 a = np.random.default_rng(3).permutation(16) + 1
 frames = [a.copy()]
@@ -33,10 +34,11 @@ def update(i):
         bar.set_color(plt.cm.viridis(h / 16))
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, len(frames), fps=20)
+ani = FuncAnimation(fig, update, frames=len(frames))
+svg = ani_to_svg(ani, fps=20)
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg

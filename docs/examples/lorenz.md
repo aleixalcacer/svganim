@@ -12,8 +12,9 @@ kernelspec:
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 s = np.ones((900, 3))
 for k in range(899):  # Lorenz system, Euler steps
@@ -34,17 +35,18 @@ def update(i):
     head.set_data(s[n - 1 : n, 0], s[n - 1 : n, 2])
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, 36, fps=15, precision=1)
+ani = FuncAnimation(fig, update, frames=36)
+svg = ani_to_svg(ani, fps=15, precision=1)
 ```
 
 The same figure with the default `precision=3` is noticeably larger:
 
 ```{code-cell} ipython3
-full = anim_to_svg(fig, update, 36, fps=15)
+full = ani_to_svg(ani, fps=15)
 f"precision=3: {len(full) / 1024:.0f} KiB, precision=1: {len(svg) / 1024:.0f} KiB"
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg

@@ -12,8 +12,9 @@ kernelspec:
 ```{code-cell} ipython3
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
 
-from svganim import anim_to_svg
+from svganim import ani_to_svg
 
 x, y = np.meshgrid(np.linspace(-3, 3, 90), np.linspace(-1.5, 1.5, 45))
 p, steps = np.array([-2.8, 1.2]), []
@@ -32,10 +33,11 @@ def update(i):
     dot.set_data(*steps[i : i + 1].T)
 
 plt.close(fig)  # otherwise the notebook also shows the static figure
-svg = anim_to_svg(fig, update, len(steps), fps=10)
+ani = FuncAnimation(fig, update, frames=len(steps))
+svg = ani_to_svg(ani, fps=10)
 ```
 
-The result is a string that displays itself as an animated image:
+`ani_to_svg` returns the SVG as a string that displays itself as an animated image:
 
 ```{code-cell} ipython3
 svg
