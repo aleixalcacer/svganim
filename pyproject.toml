@@ -1,6 +1,6 @@
 [project]
 name = "svganim"
-version = "0.3.0"
+version = "0.4.0"
 description = "Turn a matplotlib animation into a single self-contained animated SVG. No GIFs, no JavaScript."
 license = "MIT"
 license-files = ["LICENSE"]
