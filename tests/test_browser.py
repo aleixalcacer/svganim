@@ -20,9 +20,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from helpers import anim_to_svg
 from PIL import Image
-
-from svganim import anim_to_svg
 
 # The CI sets this, so that a missing browser fails there instead of skipping.
 REQUIRED = bool(os.environ.get("SVGANIM_REQUIRE_BROWSER"))

@@ -1,9 +1,10 @@
-"""Turn a matplotlib figure and an update function into one animated SVG."""
+"""Turn a matplotlib animation into one animated SVG."""
 
 from importlib.metadata import version
 
-from svganim._core import SvgAnimation, anim_to_svg
+from svganim._core import SvgAnimation
+from svganim._writer import SvgAnimWriter, ani_to_svg
 
 __version__ = version("svganim")
 
-__all__ = ["SvgAnimation", "anim_to_svg"]
+__all__ = ["SvgAnimWriter", "SvgAnimation", "ani_to_svg"]

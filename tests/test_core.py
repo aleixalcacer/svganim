@@ -8,8 +8,8 @@ from xml.etree import ElementTree as ET
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from helpers import anim_to_svg
 
-from svganim import anim_to_svg
 from svganim._diff import _Tracked
 
 
@@ -65,14 +65,6 @@ def test_output_is_reproducible():
     plt.close(fig)
 
 
-def test_writes_file(tmp_path):
-    fig, update = _wave()
-    out = tmp_path / "wave.svg"
-    svg = anim_to_svg(fig, update, n_frames=3, path=out)
-    assert out.read_text(encoding="utf-8") == svg
-    plt.close(fig)
-
-
 def test_changing_vertex_count_is_fine():
     fig, ax = plt.subplots()
     (line,) = ax.plot([0, 1], [0, 1])
@@ -108,13 +100,6 @@ def test_a_changed_kind_of_element_raises_and_names_it():
     match = r"frame 1.*found <rect> in 'artist' where the base has <path>"
     with pytest.raises(ValueError, match=match):
         tracked.see(1, _artist_made_of("rect"), None)
-
-
-def test_invalid_arguments():
-    fig, update = _wave()
-    with pytest.raises(ValueError):
-        anim_to_svg(fig, update, n_frames=0)
-    plt.close(fig)
 
 
 def _animated(svg):

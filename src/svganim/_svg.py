@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import re
+from typing import Any
 from xml.etree import ElementTree as ET
 
 import matplotlib as mpl
@@ -23,7 +24,9 @@ _FUNCTION = re.compile(r"\w+\([^)]*\)")
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?(?:e[-+]?\d+)?", re.IGNORECASE)
 
 
-def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
+def _render(
+    fig: Figure, precision: int, simplify: bool, **savefig_kwargs: Any
+) -> ET.Element:
     """Render ``fig`` to a normalized SVG tree (deterministic, vector only)."""
     # A fixed hash salt makes generated ids (clip paths, markers) deterministic.
     # Simplification changes the vertex count from frame to frame, which would
@@ -32,7 +35,8 @@ def _render(fig: Figure, precision: int, simplify: bool) -> ET.Element:
         {"svg.hashsalt": "svganim", "svg.fonttype": "path", "path.simplify": simplify}
     ):
         buf = io.BytesIO()
-        fig.savefig(buf, format="svg", metadata={"Date": None})
+        savefig_kwargs.update(format="svg", metadata={"Date": None})
+        fig.savefig(buf, **savefig_kwargs)
     root = ET.fromstring(buf.getvalue())
     for child in root.findall(_METADATA):
         root.remove(child)
