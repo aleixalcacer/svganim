@@ -14,7 +14,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv sync --python ${{ matrix.python-version }}
       - run: uv run pytest
 
@@ -28,7 +28,7 @@ jobs:
         os: [macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv run --python 3.12 pytest
 
   # The code leans on matplotlib's SVG backend, so test both ends of the supported
@@ -46,7 +46,7 @@ jobs:
             args: --upgrade-package matplotlib
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv run --python 3.12 ${{ matrix.args }} pytest
 
   # Renders the animation in Chromium and compares each frame with the plain SVG
@@ -57,7 +57,7 @@ jobs:
       SVGANIM_REQUIRE_BROWSER: "1"
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv sync --group browser
       - run: uv run playwright install --with-deps chromium-headless-shell
       - run: uv run pytest tests/test_browser.py -v
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.3
       - run: uv sync
       - run: uv run ruff check
       - run: uv run ruff format --check
